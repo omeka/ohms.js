@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="ohms.js"></script>
+<style>
+#viewer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+#transcript {
+    position: relative;
+    margin-left: 10ch;
+}
+
+#transcript a {
+    position: absolute;
+    left: -10ch;
+}
+#transcript-window {
+    height: 800px;
+    max-width: 100ch;
+    overflow-y: scroll;
+}
+#player iframe {
+    max-width: 100%;
+}
+</style>
+</head>
+<body>
+    <div id="viewer">
+        <div id="player"></div>
+        <div id="transcript-window">
+            <div id="transcript"></div>
+        </div>
+    </div>
+</body>
+<script>
+    let params = new URLSearchParams(window.location.search);
+    main(params.get('cachefile'));
+</script>
+</html>
