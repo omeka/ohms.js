@@ -91,9 +91,12 @@ function formatTime(seconds) {
 }
 
 function displayTranscript(transcript, sync) {
-    const lines = transcript.split('\n');
+    const [realTranscript, footnoteContainer] = extractFootnotes(transcript);
+    const lines = realTranscript.split('\n');
+    const transcriptContainer = document.querySelector('#transcript');
     const frag = document.createDocumentFragment();
     const speakerRegex = /^\s*([A-Z-.\' ]+:)(.*)$/;
+    const footnoteRegex = /\[\[footnote\]\]([0-9]+?)\[\[\/footnote\]\]/;
     const syncData = parseSyncString(sync);
 
     let para = document.createElement('p');
@@ -116,6 +119,7 @@ function displayTranscript(transcript, sync) {
             link.dataset.seconds = seconds;
             link.textContent = formatTime(seconds);
             link.href = '#';
+            link.className = 'timestamp-link';
             span.appendChild(link);
         }
         if (paraNew) {
@@ -126,8 +130,20 @@ function displayTranscript(transcript, sync) {
                 span.appendChild(speaker);
                 line = matches[2];
             }
-        } 
-        span.appendChild(document.createTextNode(line));
+        }
+        const footnoteSplit = line.split(footnoteRegex);
+        footnoteSplit.forEach((str, index) => {
+            if (index % 2 === 0) {
+                span.appendChild(document.createTextNode(str));
+            } else {
+                const footnoteLink = document.createElement('a');
+                footnoteLink.textContent = '[' + str + ']';
+                footnoteLink.id = 'fr' + str;
+                footnoteLink.href = '#fn' + str;
+                footnoteLink.className = 'footnote-link';
+                span.appendChild(footnoteLink);
+            }
+        });
 
         para.appendChild(span);
         para.appendChild(document.createTextNode('\n'));
@@ -136,7 +152,64 @@ function displayTranscript(transcript, sync) {
             paraNew = false;
         }
     });
-    document.querySelector('#transcript').appendChild(frag);
+    transcriptContainer.appendChild(frag);
+    if (footnoteContainer) {
+        transcriptContainer.appendChild(footnoteContainer);
+    }
+}
+
+function extractFootnotes(transcript) {
+    const regex = /\[\[footnotes\]\](.*)\[\[\/footnotes\]\]/s;
+    const noteRegex = /\[\[note\]\](.*?)\[\[\/note\]\]/sg;
+    const noteLinkRegex = /\[\[link\]\](.*?)\[\[\/link\]\]/s;
+    const urlRegex = /^https?:\/\//;
+    const matches = transcript.split(regex);
+    if (matches.length === 1) {
+        return [transcript, null];
+    } else {
+        const footnotes = matches[1];
+        const noteMatches = footnotes.matchAll(noteRegex);
+
+        const footnoteContainer = document.createElement('div');
+        footnoteContainer.className = 'footnote-container';
+        const footnoteHeader = document.createElement('h2');
+        footnoteHeader.textContent = 'Footnotes';
+        footnoteContainer.appendChild(footnoteHeader);
+
+        let footnoteIndex = 1;
+        for (const noteMatch of noteMatches) {
+            const footnote = document.createElement('p');
+            footnote.id = 'fn' + footnoteIndex;
+
+            const footnoteNumber = document.createElement('a');
+            footnoteNumber.textContent = footnoteIndex;
+            footnoteNumber.href = '#fr' + footnoteIndex;
+            footnoteNumber.className = 'footnote-linkback';
+            footnote.appendChild(footnoteNumber);
+            footnote.appendChild(document.createTextNode(' '));
+
+            let noteContents = noteMatch[1];
+            let noteUrl;
+            noteContents = noteContents.replace(noteLinkRegex, (linkMatch, linkText) => {
+                noteUrl = linkText.trim();
+                return '';
+            });
+            if (noteUrl) {
+                const link = document.createElement('a');
+                if (!urlRegex.test(noteUrl)) {
+                    noteUrl = 'http://' + noteUrl;
+                }
+                link.href = noteUrl;
+                link.textContent = noteContents.trim();
+                footnote.appendChild(link);
+            } else {
+               footnote.appendChild(document.createTextNode(noteContents.trim()));
+            }
+            footnoteContainer.appendChild(footnote);
+            footnoteIndex++;
+        }
+        return [matches[0], footnoteContainer];
+    }
 }
 
 function displayMedia(data) {
