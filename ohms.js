@@ -1,5 +1,7 @@
 "use strict";
 
+let jumpToTime;
+
 async function getCachefile(url) {
     const response = await fetch(url);
     return response.text();
@@ -254,7 +256,14 @@ function displayMedia(data) {
             vimeoContainer.id = 'vimeo-player';
             player.appendChild(vimeoContainer);
 
-            const vimeoPlayer = new Vimeo.Player('vimeo-player', {url: videoUrl}); 
+            const vimeoPlayer = new Vimeo.Player('vimeo-player', {url: videoUrl});
+
+            jumpToTime = async (seconds) => {
+                await vimeoPlayer.setCurrentTime(seconds);
+                if (await vimeoPlayer.getPaused()) {
+                    vimeoPlayer.play();
+                }
+            };
         });
         document.body.appendChild(script);
     }
@@ -296,8 +305,23 @@ function displayIndex(indexPoints) {
     });
     index.appendChild(frag);
 }
+
+function setListeners() {
+    document.body.addEventListener('click', (e) => {
+        const target = e.target;
+        if (!target.matches('a.timestamp-link')) {
+            return;
+        }
+        e.preventDefault();
+        if (jumpToTime && 'seconds' in target.dataset) {
+            jumpToTime(target.dataset.seconds);
+        }
+    });
+}
+
 async function main(url) {
     const data = await parse(url);
+    setListeners();
     displayMedia(data);
     displayTranscript(data.transcript, data.sync);
     displayIndex(data.index_points);
