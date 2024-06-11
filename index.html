@@ -17,7 +17,7 @@
     position: absolute;
     left: -10ch;
 }
-#transcript-window {
+#transcript-window, #index {
     height: 800px;
     max-width: 100ch;
     overflow-y: scroll;
@@ -25,13 +25,30 @@
 #player iframe {
     max-width: 100%;
 }
+#under-player {
+    display: flex;
+    gap: 1em;
+}
+.index-point {
+    margin: 1em 0;
+}
+.index-point > span {
+    display: block;
+    margin: .5em 0;
+}
+.index-title {
+    font-weight: bold;
+}
 </style>
 </head>
 <body>
     <div id="viewer">
         <div id="player"></div>
-        <div id="transcript-window">
-            <div id="transcript"></div>
+        <div id="under-player">
+            <div id="transcript-window">
+                <div id="transcript"></div>
+            </div>
+            <div id="index"></div>
         </div>
     </div>
 </body>

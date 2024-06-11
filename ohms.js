@@ -44,6 +44,33 @@ async function parse(url) {
     data['media_host_clip_id'] = getChildText(mediafile, 'host_clip_id');
     data['media_clip_format'] = getChildText(mediafile, 'clip_format');
 
+    const indexPoints = record.querySelectorAll(':scope > index > point');
+    data.index_points = Array.from(indexPoints, (point) => {
+        const pointData = {
+            time: parseInt(getChildText(point, 'time'), 10),
+            title: getChildText(point, 'title'),
+            title_alt: getChildText(point, 'title_alt'),
+            partial_transcript: getChildText(point, 'partial_transcript'),
+            partial_transcript_alt: getChildText(point, 'partial_transcript_alt'),
+            synopsis: getChildText(point, 'synopsis'),
+            synopsis_alt: getChildText(point, 'synopsis_alt'),
+            keywords: getChildText(point, 'keywords'),
+            keywords_alt: getChildText(point, 'keywords_alt'),
+            subjects: getChildText(point, 'subjects'),
+            subjects_alt: getChildText(point, 'subjects_alt'),
+        };
+        const gpsPoints = point.querySelectorAll(':scope > gpspoints');
+        pointData.gps_points = Array.from(gpsPoints, (gpspoint) => {
+            return {
+                gps: getChildText(gpspoint, 'gps'),
+                gps_zoom: getChildText(gpspoint, 'gps_zoom'),
+                gps_text: getChildText(gpspoint, 'gps_text'),
+                gps_text_alt: getChildText(gpspoint, 'gps_text_alt'),
+            };
+        });
+        return pointData;
+    });
+
     console.log(data);
     return data;
 }
@@ -233,8 +260,45 @@ function displayMedia(data) {
     }
 }
 
+function displayIndex(indexPoints) {
+    const index = document.querySelector('#index');
+    const frag = document.createDocumentFragment();
+    indexPoints.forEach((indexPoint) => {
+        const div = document.createElement('div');
+        div.className = 'index-point';
+
+        const title = document.createElement('span');
+        title.className = 'index-title';
+        title.textContent = indexPoint.title;
+        div.appendChild(title);
+
+        const link = document.createElement('a');
+        link.dataset.seconds = indexPoint.time;
+        link.className = 'timestamp-link';
+        link.textContent = formatTime(indexPoint.time);
+        link.href = '#';
+        div.appendChild(link);
+
+        if (indexPoint.partial_transcript) {
+            const partialTranscript = document.createElement('span');
+            partialTranscript.className = 'index-partial-transcript';
+            partialTranscript.textContent = indexPoint.partial_transcript;
+            div.appendChild(partialTranscript);
+        }
+
+        if (indexPoint.synopsis) {
+            const synopsis = document.createElement('span');
+            synopsis.className = 'index-synopsis';
+            synopsis.textContent = indexPoint.synopsis;
+            div.appendChild(synopsis);
+        }
+        frag.appendChild(div);
+    });
+    index.appendChild(frag);
+}
 async function main(url) {
     const data = await parse(url);
     displayMedia(data);
     displayTranscript(data.transcript, data.sync);
+    displayIndex(data.index_points);
 }
