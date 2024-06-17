@@ -306,6 +306,24 @@ function displayIndex(indexPoints) {
     index.appendChild(frag);
 }
 
+function displayMetadata(data) {
+    const metadata = document.querySelector('#main-metadata');
+    const frag = document.createDocumentFragment();
+    const title = data['title'] || 'Untitled';
+    document.title = title;
+
+    const h1 = document.createElement('h1');
+    h1.textContent = title;
+    frag.appendChild(h1);
+
+    const repo = document.createElement('span');
+    repo.className = 'repository';
+    repo.textContent = data['repository'];
+    frag.appendChild(repo);
+
+    metadata.appendChild(frag);
+}
+
 function setListeners() {
     document.body.addEventListener('click', (e) => {
         const target = e.target;
@@ -322,6 +340,7 @@ function setListeners() {
 async function main(url) {
     const data = await parse(url);
     setListeners();
+    displayMetadata(data);
     displayMedia(data);
     displayTranscript(data.transcript, data.sync);
     displayIndex(data.index_points);
