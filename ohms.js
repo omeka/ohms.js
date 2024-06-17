@@ -289,7 +289,7 @@ function displayIndex(indexPoints) {
         div.appendChild(link);
 
         if (indexPoint.partial_transcript) {
-            const partialTranscript = document.createElement('span');
+            const partialTranscript = document.createElement('blockquote');
             partialTranscript.className = 'index-partial-transcript';
             partialTranscript.textContent = indexPoint.partial_transcript;
             div.appendChild(partialTranscript);
