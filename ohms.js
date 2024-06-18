@@ -98,14 +98,14 @@ function parseSyncString(sync) {
     const syncData = new Map();
     syncData.set(0, 0);
     syncLines.forEach((syncLine, index) => {
-        const lineMinutes = (index) * chunkSize;
+        const lineSeconds = (index) * chunkSize * 60;
         const lineNumber = parseInt(syncLine, 10);
 
         if (!lineNumber) {
             return;
         }
 
-        syncData.set(lineNumber, lineMinutes);
+        syncData.set(lineNumber, lineSeconds);
     });
 
     return syncData;
@@ -119,7 +119,7 @@ function formatTime(seconds) {
     return h + ':' + m + ':' + s;
 }
 
-function displayTranscript(transcript, sync) {
+function displayTranscript(transcript, sync, indexPoints) {
     const [realTranscript, footnoteContainer] = extractFootnotes(transcript);
     const lines = realTranscript.split('\n');
     const transcriptContainer = document.querySelector('#transcript');
@@ -127,6 +127,9 @@ function displayTranscript(transcript, sync) {
     const speakerRegex = /^\s*([A-Z-.\' ]+:)(.*)$/;
     const footnoteRegex = /\[\[footnote\]\]([0-9]+?)\[\[\/footnote\]\]/;
     const syncData = parseSyncString(sync);
+
+    const indexData = getIndexLines(syncData, indexPoints, lines.length);
+    console.log(indexData);
 
     let para = document.createElement('p');
     let paraNew = true;
@@ -144,11 +147,20 @@ function displayTranscript(transcript, sync) {
         const syncPoint = syncData.get(index);
         if (typeof syncPoint === 'number') {
             const link = document.createElement('a');
-            const seconds = syncPoint * 60;
-            link.dataset.seconds = seconds;
-            link.textContent = formatTime(seconds);
+            link.dataset.seconds = syncPoint;
+            link.textContent = formatTime(syncPoint);
             link.href = '#';
             link.className = 'timestamp-link';
+            span.appendChild(link);
+        }
+
+        const indexPoint = indexData.get(index);
+        if (typeof indexPoint === 'number') {
+            const link = document.createElement('a');
+            link.href = '#index-point-' + indexPoint;
+            link.textContent = 'i';
+            link.className = 'index-link';
+            link.id = 'transcript-index-point-' + indexPoint;
             span.appendChild(link);
         }
         if (paraNew) {
@@ -185,6 +197,30 @@ function displayTranscript(transcript, sync) {
     if (footnoteContainer) {
         transcriptContainer.appendChild(footnoteContainer);
     }
+}
+
+function getIndexLines(syncData, indexPoints) {
+    const indexData = new Map();
+    const syncArray = Array.from(syncData);
+    let syncIndex = 0;
+    let [currentLine, currentTime] = syncArray[syncIndex];
+
+    indexPoints.forEach((indexPoint, i) => {
+        const indexTime = indexPoint.time;
+        while (currentTime < indexTime && syncIndex < syncArray.length) {
+            syncIndex++;
+            [currentLine, currentTime] = syncArray[syncIndex];
+        }
+        if (currentTime > indexTime) {
+            let [previousLine, previousTime] = syncArray[syncIndex - 1];
+            let betweenLine = previousLine + Math.round((currentLine - previousLine) / (currentTime - previousTime) * (indexTime - previousTime));
+            indexData.set(betweenLine, i);
+        } else {
+            indexData.set(currentLine, i);
+        }
+
+    });
+    return indexData;
 }
 
 function extractFootnotes(transcript) {
@@ -272,9 +308,10 @@ function displayMedia(data) {
 function displayIndex(indexPoints) {
     const index = document.querySelector('#index');
     const frag = document.createDocumentFragment();
-    indexPoints.forEach((indexPoint) => {
+    indexPoints.forEach((indexPoint, i) => {
         const div = document.createElement('div');
         div.className = 'index-point';
+        div.id = 'index-point-' + i;
 
         const title = document.createElement('span');
         title.className = 'index-title';
@@ -287,6 +324,12 @@ function displayIndex(indexPoints) {
         link.textContent = formatTime(indexPoint.time);
         link.href = '#';
         div.appendChild(link);
+
+        const transcriptLink = document.createElement('a');
+        transcriptLink.href = '#transcript-index-point-' + i;
+        transcriptLink.className = 'transcript-index-link';
+        transcriptLink.textContent = 'View in transcript';
+        div.appendChild(transcriptLink);
 
         if (indexPoint.partial_transcript) {
             const partialTranscript = document.createElement('blockquote');
@@ -342,6 +385,6 @@ async function main(url) {
     setListeners();
     displayMetadata(data);
     displayMedia(data);
-    displayTranscript(data.transcript, data.sync);
+    displayTranscript(data.transcript, data.sync, data.index_points);
     displayIndex(data.index_points);
 }
