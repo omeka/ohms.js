@@ -78,7 +78,7 @@ async function parse(url) {
 
 function getChildText(element, childName) {
     const child = element.querySelector(':scope > ' + childName)
-    return child ? child.textContent : null;
+    return child ? child.textContent : '';
 }
 
 function parseSyncString(sync) {
@@ -277,29 +277,87 @@ function extractFootnotes(transcript) {
 
 function displayMedia(data) {
     const player = document.querySelector('#player');
-    if (data.media_host === 'Vimeo') {
-        const parser = new DOMParser;
-        const embedDoc = parser.parseFromString(data.kembed, 'text/html');
-        const iframe = embedDoc.querySelector('iframe');
-        const videoUrl = iframe.src;
+    const host = data.media_host.toLowerCase();
+    switch (host) {
+        case 'vimeo':
+            let videoUrl;
+            if (data.media_url) {
+                videoUrl = data.media_url;
+            } else if (data.kembed) {
+                const parser = new DOMParser;
+                const embedDoc = parser.parseFromString(data.kembed, 'text/html');
+                const iframe = embedDoc.querySelector('iframe');
+                videoUrl = iframe.src;
+            } else {
+                break;
+            }
 
-        const script = document.createElement('script');
-        script.src = 'https://player.vimeo.com/api/player.js';
-        script.addEventListener('load', () => {
-            const vimeoContainer = document.createElement('div');
-            vimeoContainer.id = 'vimeo-player';
-            player.appendChild(vimeoContainer);
+            {
+                const script = document.createElement('script');
+                script.src = 'https://player.vimeo.com/api/player.js';
+                script.addEventListener('load', () => {
+                    const vimeoContainer = document.createElement('div');
+                    vimeoContainer.id = 'vimeo-player';
+                    player.appendChild(vimeoContainer);
 
-            const vimeoPlayer = new Vimeo.Player('vimeo-player', {url: videoUrl});
+                    const vimeoPlayer = new Vimeo.Player('vimeo-player', {url: videoUrl});
 
-            jumpToTime = async (seconds) => {
-                await vimeoPlayer.setCurrentTime(seconds);
-                if (await vimeoPlayer.getPaused()) {
-                    vimeoPlayer.play();
+                    jumpToTime = async (seconds) => {
+                        await vimeoPlayer.setCurrentTime(seconds);
+                        if (await vimeoPlayer.getPaused()) {
+                            vimeoPlayer.play();
+                        }
+                    };
+                });
+            }
+            document.body.appendChild(script);
+            break;
+        case 'youtube':
+            let videoId;
+            if (data.media_url) {
+                videoId = data.media_url.replace(/^https?:\/\/youtu.be\//, '');
+            } else if (data.kembed) {
+                const parser = new DOMParser;
+                const embedDoc = parser.parseFromString(data.kembed, 'text/html');
+                const iframe = embedDoc.querySelector('iframe');
+                videoId = new URL(iframe.src).pathname.replace(/^\/embed\//, '');
+            }
+            {
+                const script = document.createElement('script');
+                script.src = 'https://www.youtube.com/iframe_api';
+                window.onYouTubeIframeAPIReady = function () {
+                    const ytContainer = document.createElement('div');
+                    ytContainer.id = 'youtube-player';
+                    player.appendChild(ytContainer);
+                    const ytPlayer = new YT.Player('youtube-player', {
+                        width: '640',
+                        height: '390',
+                        videoId: videoId,
+                        playerVars: {playsinline: 1}
+                    });
+
+                    jumpToTime = (seconds) => {
+                        ytPlayer.seekTo(seconds, true);
+                        if (ytPlayer.getPlayerState() !== 1) {
+                            ytPlayer.playVideo();
+                        }
+                    };
                 }
-            };
-        });
-        document.body.appendChild(script);
+                document.body.appendChild(script);
+            }
+            break;
+        case 'aviary':
+            const url = new URL(data.media_url);
+            if (!url.hostname.endsWith('.aviaryplatform.com')) {
+                break;
+            }
+
+            const iframe = document.createElement('iframe');
+            iframe.src = data.media_url;
+            iframe.width = 480;
+            iframe.height = 270;
+            player.appendChild(iframe);
+            break;
     }
 }
 
