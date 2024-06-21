@@ -73,7 +73,6 @@ async function parse(url) {
         return pointData;
     });
 
-    console.log(data);
     return data;
 }
 
@@ -129,7 +128,6 @@ function displayTranscript(transcript, sync, indexPoints) {
     const syncData = parseSyncString(sync);
 
     const indexData = getIndexLines(syncData, indexPoints, lines.length);
-    console.log(indexData);
 
     let para = document.createElement('p');
     let paraNew = true;
