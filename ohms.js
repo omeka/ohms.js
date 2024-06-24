@@ -309,8 +309,8 @@ function displayMedia(data) {
                         }
                     };
                 });
+                document.body.appendChild(script);
             }
-            document.body.appendChild(script);
             break;
         case 'youtube':
             let videoId;
