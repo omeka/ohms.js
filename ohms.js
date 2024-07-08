@@ -37,6 +37,8 @@ async function parse(url) {
         user_notes: getChildText(record, 'user_notes'),
         transcript: getChildText(record, 'transcript'),
         transcript_alt: getChildText(record, 'transcript_alt'),
+        vtt_transcript: getChildText(record, 'vtt_transcript'),
+        vtt_transcript_alt: getChildText(record, 'vtt_transcript_alt'),
     }
 
     const mediafile = record.querySelector('mediafile');
@@ -275,6 +277,69 @@ function extractFootnotes(transcript) {
     }
 }
 
+function displayVttTranscript(vttTranscript, indexPoints) {
+    const timingsRegex = /(^.*-->.*$)/m
+    const voiceTagRegex = /<v(?:\.[^ \t>]+)?[ \t]([^>]*)>/
+    const vttTagRegex = /<\/?[^>]*>/g
+    const postCueRegex = /\n\n.*/ms
+    const frag = document.createDocumentFragment();
+    const vttArray = vttTranscript.split(timingsRegex);
+    let previousTimestamp = null;
+    for (let i = 1; i < vttArray.length; i+=2) {
+        const timingsLine = vttArray[i];
+        const caption = vttArray[i+1];
+        const timestamp = parseVttTimestamp(timingsLine);
+
+        const para = document.createElement('p');
+        const span = document.createElement('span');
+
+        if (timestamp !== previousTimestamp) {
+            const link = document.createElement('a');
+            link.dataset.seconds = timestamp;
+            link.textContent = formatTime(timestamp);
+            link.href = '#';
+            link.className = 'timestamp-link';
+            span.appendChild(link);
+            previousTimestamp = timestamp;
+        }
+
+        caption.replace(postCueRegex, '').split(voiceTagRegex).forEach((captionText, j) => {
+            if (j % 2 === 1) {
+                const speaker = document.createElement('b');
+                speaker.textContent = captionText + ': ';
+                span.appendChild(speaker);
+            } else {
+                span.appendChild(document.createTextNode(captionText.replaceAll(vttTagRegex, '')));
+            }
+        });
+
+        para.appendChild(span);
+        frag.appendChild(para);
+    }
+
+    document.querySelector('#transcript').appendChild(frag);
+}
+
+function parseVttTimestamp(timestamp) {
+    const timestampRegex = /(?:([0-9]{2}):)?([0-9]{2}):([0-9]{2})\.([0-9]{3})/
+    const match = timestamp.match(timestampRegex);
+    let hours = 0, minutes = 0, seconds = 0;
+    if (!match) {
+        return null;
+    }
+
+    if (match[1]) {
+        hours = parseInt(match[1], 10);
+    }
+    minutes = parseInt(match[2], 10);
+    seconds = parseInt(match[3], 10);
+
+    if (minutes > 59 || seconds > 59) {
+        return null;
+    }
+    return (hours * 3600) + (minutes * 60) + seconds;
+}
+
 function displayMedia(data) {
     const player = document.querySelector('#player');
     const host = data.media_host.toLowerCase();
@@ -441,6 +506,10 @@ async function main(url) {
     setListeners();
     displayMetadata(data);
     displayMedia(data);
-    displayTranscript(data.transcript, data.sync, data.index_points);
+    if (data.vtt_transcript) {
+        displayVttTranscript(data.vtt_transcript, data.index_points);
+    } else {
+        displayTranscript(data.transcript, data.sync, data.index_points);
+    }
     displayIndex(data.index_points);
 }
