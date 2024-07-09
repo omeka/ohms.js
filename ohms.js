@@ -361,11 +361,7 @@ function displayMedia(data) {
                 const script = document.createElement('script');
                 script.src = 'https://player.vimeo.com/api/player.js';
                 script.addEventListener('load', () => {
-                    const vimeoContainer = document.createElement('div');
-                    vimeoContainer.id = 'vimeo-player';
-                    player.appendChild(vimeoContainer);
-
-                    const vimeoPlayer = new Vimeo.Player('vimeo-player', {url: videoUrl});
+                    const vimeoPlayer = new Vimeo.Player(player, {url: videoUrl});
 
                     jumpToTime = async (seconds) => {
                         await vimeoPlayer.setCurrentTime(seconds);
