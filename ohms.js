@@ -85,8 +85,9 @@ function getChildText(element, childName) {
 
 function parseSyncString(sync) {
     const syncParts = sync.split(':');
-    if (!syncParts.length === 2) {
-        return {};
+    const syncData = new Map();
+    if (syncParts.length !== 2) {
+        return syncData;
     }
 
     let chunkSize = parseInt(syncParts[0], 10);
@@ -96,7 +97,6 @@ function parseSyncString(sync) {
 
     const syncLines = syncParts[1].replace(/\(.*?\)/g, '').split('|');
 
-    const syncData = new Map();
     syncData.set(0, 0);
     syncLines.forEach((syncLine, index) => {
         const lineSeconds = (index) * chunkSize * 60;
@@ -202,6 +202,11 @@ function displayTranscript(transcript, sync, indexPoints) {
 function getIndexLines(syncData, indexPoints) {
     const indexData = new Map();
     const syncArray = Array.from(syncData);
+
+    if (syncArray.length === 0) {
+        return indexData;
+    }
+
     let syncIndex = 0;
     let [currentLine, currentTime] = syncArray[syncIndex];
 
