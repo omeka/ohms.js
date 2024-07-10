@@ -424,6 +424,44 @@ function displayMedia(data) {
             iframe.height = 270;
             player.appendChild(iframe);
             break;
+        case 'kaltura':
+            if (data.kembed) {
+                const parser = new DOMParser;
+                const embedDoc = parser.parseFromString(data.kembed, 'text/html');
+                const iframe = embedDoc.querySelector('iframe');
+                const kalturaUrlRegex = /\/p\/([0-9]+)\/sp\/(?:[0-9]+)00\/embedIframeJs\/uiconf_id\/([0-9]+)\//;
+                const iframeUrl = new URL(iframe.src);
+                const query = new URLSearchParams(iframeUrl.search);
+                const match = iframeUrl.pathname.match(kalturaUrlRegex);
+                if (!match || !query.has('entry_id')) {
+                    break;
+                }
+                const partnerId = match[1];
+                const uiconfId = match[2];
+                const entryId = query.get('entry_id');
+
+                const script = document.createElement('script');
+                script.src = `https://cdnapisec.kaltura.com/p/${partnerId}/sp/${partnerId}00/embedIframeJs/uiconf_id/${uiconfId}/partner_id/${partnerId}`;
+                script.addEventListener('load', () => {
+                    kWidget.embed({
+                        targetId: 'player',
+                        wid: '_' + partnerId,
+                        uiconf_id: uiconfId,
+                        entry_id: entryId,
+                        readyCallback: (playerId) => {
+                            const kdp = document.getElementById(playerId);
+
+                            jumpToTime = (seconds) => {
+                                kdp.sendNotification('doSeek', seconds);
+                                kdp.sendNotification('doPlay');
+                            }
+                        }
+                    });
+                });
+                document.body.appendChild(script);
+            }
+
+            break;
     }
 }
 
