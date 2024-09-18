@@ -461,7 +461,17 @@ function displayMedia(data) {
     }
 }
 
-function displayIndex(indexPoints) {
+function displayIndex(indexPoints, translate) {
+    let titleKey, partialTranscriptKey, synopsisKey;
+    if (translate) {
+        titleKey = 'title_alt';
+        partialTranscriptKey = 'partial_transcript_alt';
+        synopsisKey = 'synopsis_alt';
+    } else {
+        titleKey = 'title';
+        partialTranscriptKey = 'partial_transcript';
+        synopsisKey = 'synopsis';
+    }
     const index = document.querySelector('#index');
     const frag = document.createDocumentFragment();
     indexPoints.forEach((indexPoint, i) => {
@@ -472,7 +482,7 @@ function displayIndex(indexPoints) {
 
         div.appendChild(createElement('span', {
             className: 'index-title',
-            textContent: indexPoint.title,
+            textContent: indexPoint[titleKey],
         }));
 
         div.appendChild(createElement('a', {
@@ -491,14 +501,14 @@ function displayIndex(indexPoints) {
         if (indexPoint.partial_transcript) {
             div.appendChild(createElement('blockquote', {
                 className: 'index-partial-transcript',
-                textContent: indexPoint.partial_transcript,
+                textContent: indexPoint[partialTranscriptKey],
             }));
         }
 
         if (indexPoint.synopsis) {
             div.appendChild(createElement('span', {
                 className: 'index-synopsis',
-                textContent: indexPoint.synopsis,
+                textContent: indexPoint[synopsisKey],
             }));
         }
         frag.appendChild(div);
@@ -552,13 +562,25 @@ async function main(url) {
         return;
     }
     const data = await parse(url);
+    const translate = false;
     setListeners();
     displayMetadata(data);
     displayMedia(data);
-    if (data.vtt_transcript) {
-        displayVttTranscript(data.vtt_transcript, data.index_points);
+
+    let transcript, vttTranscript, sync;
+    if (translate) {
+        transcript = data.transcript_alt;
+        vttTranscript = data.vtt_transcript_alt;
+        sync = data.sync_alt;
     } else {
-        displayTranscript(data.transcript, data.sync, data.index_points);
+        transcript = data.transcript;
+        vttTranscript = data.vtt_transcript;
+        sync = data.sync;
     }
-    displayIndex(data.index_points);
+    if (vttTranscript) {
+        displayVttTranscript(vttTranscript, data.index_points);
+    } else {
+        displayTranscript(transcript, sync, data.index_points);
+    }
+    displayIndex(data.index_points, translate);
 }
