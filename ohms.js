@@ -149,29 +149,27 @@ function displayTranscript(transcript, sync, indexPoints) {
 
         const syncPoint = syncData.get(index);
         if (typeof syncPoint === 'number') {
-            const link = document.createElement('a');
-            link.dataset.seconds = syncPoint;
-            link.textContent = formatTime(syncPoint);
-            link.href = '#';
-            link.className = 'timestamp-link';
-            span.appendChild(link);
+            span.appendChild(createElement('a', {
+                dataset: {seconds: syncPoint},
+                textContent: formatTime(syncPoint),
+                href: '#',
+                className: 'timestamp-link',
+            }));
         }
 
         const indexPoint = indexData.get(index);
         if (typeof indexPoint === 'number') {
-            const link = document.createElement('a');
-            link.href = '#index-point-' + indexPoint;
-            link.textContent = 'i';
-            link.className = 'index-link';
-            link.id = 'transcript-index-point-' + indexPoint;
-            span.appendChild(link);
+            span.appendChild(createElement('a', {
+                href: '#index-point-' + indexPoint,
+                textContent: 'i',
+                className: 'index-link',
+                id: 'transcript-index-point-' + indexPoint,
+            }));
         }
         if (paraNew) {
             const matches = line.match(speakerRegex);
             if (matches) {
-                const speaker = document.createElement('b');
-                speaker.textContent = matches[1];
-                span.appendChild(speaker);
+                span.appendChild(createElement('b', {textContent: matches[1]}));
                 line = matches[2];
             }
         }
@@ -180,12 +178,12 @@ function displayTranscript(transcript, sync, indexPoints) {
             if (index % 2 === 0) {
                 span.appendChild(document.createTextNode(str));
             } else {
-                const footnoteLink = document.createElement('a');
-                footnoteLink.textContent = '[' + str + ']';
-                footnoteLink.id = 'fr' + str;
-                footnoteLink.href = '#fn' + str;
-                footnoteLink.className = 'footnote-link';
-                span.appendChild(footnoteLink);
+                span.appendChild(createElement('a', {
+                    textContent: '[' + str + ']',
+                    id: 'fr' + str,
+                    href: '#fn' + str,
+                    className: 'footnote-link',
+                }));
             }
         });
 
@@ -243,22 +241,18 @@ function extractFootnotes(transcript) {
         const footnotes = matches[1];
         const noteMatches = footnotes.matchAll(noteRegex);
 
-        const footnoteContainer = document.createElement('div');
-        footnoteContainer.className = 'footnote-container';
-        const footnoteHeader = document.createElement('h2');
-        footnoteHeader.textContent = 'Footnotes';
-        footnoteContainer.appendChild(footnoteHeader);
+        const footnoteContainer = createElement('div', {className: 'footnote-container'});
+        footnoteContainer.appendChild(createElement('h2', {textContent: 'Footnotes'}));
 
         let footnoteIndex = 1;
         for (const noteMatch of noteMatches) {
-            const footnote = document.createElement('p');
-            footnote.id = 'fn' + footnoteIndex;
+            const footnote = createElement('p', {id: 'fn' + footnoteIndex});
 
-            const footnoteNumber = document.createElement('a');
-            footnoteNumber.textContent = footnoteIndex;
-            footnoteNumber.href = '#fr' + footnoteIndex;
-            footnoteNumber.className = 'footnote-linkback';
-            footnote.appendChild(footnoteNumber);
+            footnote.appendChild(createElement('a', {
+                textContent: footnoteIndex,
+                href: '#fr' + footnoteIndex,
+                className: 'footnote-linkback',
+            }));
             footnote.appendChild(document.createTextNode(' '));
 
             let noteContents = noteMatch[1];
@@ -268,13 +262,13 @@ function extractFootnotes(transcript) {
                 return '';
             });
             if (noteUrl) {
-                const link = document.createElement('a');
                 if (!urlRegex.test(noteUrl)) {
                     noteUrl = 'http://' + noteUrl;
                 }
-                link.href = noteUrl;
-                link.textContent = noteContents.trim();
-                footnote.appendChild(link);
+                footnote.appendChild(createElement('a', {
+                    href: noteUrl,
+                    textContent: noteContents.trim(),
+                }));
             } else {
                footnote.appendChild(document.createTextNode(noteContents.trim()));
             }
@@ -302,20 +296,18 @@ function displayVttTranscript(vttTranscript, indexPoints) {
         const span = document.createElement('span');
 
         if (timestamp !== previousTimestamp) {
-            const link = document.createElement('a');
-            link.dataset.seconds = timestamp;
-            link.textContent = formatTime(timestamp);
-            link.href = '#';
-            link.className = 'timestamp-link';
-            span.appendChild(link);
+            span.appendChild(createElement('a', {
+                dataset: {seconds: timestamp},
+                textContent: formatTime(timestamp),
+                href: '#',
+                className: 'timestamp-link',
+            }));
             previousTimestamp = timestamp;
         }
 
         caption.replace(postCueRegex, '').split(voiceTagRegex).forEach((captionText, j) => {
             if (j % 2 === 1) {
-                const speaker = document.createElement('b');
-                speaker.textContent = captionText + ': ';
-                span.appendChild(speaker);
+                span.appendChild(createElement('b', {textContent: captionText + ': '}));
             } else {
                 span.appendChild(document.createTextNode(captionText.replaceAll(vttTagRegex, '')));
             }
@@ -421,11 +413,12 @@ function displayMedia(data) {
                 break;
             }
 
-            const iframe = document.createElement('iframe');
-            iframe.src = data.media_url;
-            iframe.width = 480;
-            iframe.height = 270;
-            player.appendChild(iframe);
+            player.appendChild(createElement('iframe', {
+                src: data.media_url,
+                width: 480,
+                height: 270,
+            }));
+
             break;
         case 'kaltura':
             if (data.kembed) {
@@ -472,40 +465,41 @@ function displayIndex(indexPoints) {
     const index = document.querySelector('#index');
     const frag = document.createDocumentFragment();
     indexPoints.forEach((indexPoint, i) => {
-        const div = document.createElement('div');
-        div.className = 'index-point';
-        div.id = 'index-point-' + i;
+        const div = createElement('div', {
+            className: 'index-point',
+            id: 'index-point-' + i,
+        });
 
-        const title = document.createElement('span');
-        title.className = 'index-title';
-        title.textContent = indexPoint.title;
-        div.appendChild(title);
+        div.appendChild(createElement('span', {
+            className: 'index-title',
+            textContent: indexPoint.title,
+        }));
 
-        const link = document.createElement('a');
-        link.dataset.seconds = indexPoint.time;
-        link.className = 'timestamp-link';
-        link.textContent = formatTime(indexPoint.time);
-        link.href = '#';
-        div.appendChild(link);
+        div.appendChild(createElement('a', {
+            dataset: {seconds: indexPoint.time},
+            className: 'timestamp-link',
+            textContent: formatTime(indexPoint.time),
+            href: '#',
+        }));
 
-        const transcriptLink = document.createElement('a');
-        transcriptLink.href = '#transcript-index-point-' + i;
-        transcriptLink.className = 'transcript-index-link';
-        transcriptLink.textContent = 'View in transcript';
-        div.appendChild(transcriptLink);
+        div.appendChild(createElement('a', {
+            href: '#transcript-index-point-' + i,
+            className: 'transcript-index-link',
+            textContent: 'View in transcript',
+        }));
 
         if (indexPoint.partial_transcript) {
-            const partialTranscript = document.createElement('blockquote');
-            partialTranscript.className = 'index-partial-transcript';
-            partialTranscript.textContent = indexPoint.partial_transcript;
-            div.appendChild(partialTranscript);
+            div.appendChild(createElement('blockquote', {
+                className: 'index-partial-transcript',
+                textContent: indexPoint.partial_transcript,
+            }));
         }
 
         if (indexPoint.synopsis) {
-            const synopsis = document.createElement('span');
-            synopsis.className = 'index-synopsis';
-            synopsis.textContent = indexPoint.synopsis;
-            div.appendChild(synopsis);
+            div.appendChild(createElement('span', {
+                className: 'index-synopsis',
+                textContent: indexPoint.synopsis,
+            }));
         }
         frag.appendChild(div);
     });
@@ -518,16 +512,26 @@ function displayMetadata(data) {
     const title = data['title'] || 'Untitled';
     document.title = title;
 
-    const h1 = document.createElement('h1');
-    h1.textContent = title;
-    frag.appendChild(h1);
+    frag.appendChild(createElement('h1', {textContent: title}));
 
-    const repo = document.createElement('span');
-    repo.className = 'repository';
-    repo.textContent = data['repository'];
-    frag.appendChild(repo);
+    frag.appendChild(createElement('span', {
+        className: 'repository',
+        textContent: data['repository'],
+    }));
 
     metadata.appendChild(frag);
+}
+
+function createElement(tagName, properties) {
+    const element = document.createElement(tagName);
+    if (Object.hasOwn(properties, 'dataset')) {
+        for (const [key, value] of Object.entries(properties.dataset)) {
+            element.dataset[key] = value;
+        }
+        delete properties.dataset;
+    }
+    Object.assign(element, properties);
+    return element;
 }
 
 function setListeners() {
