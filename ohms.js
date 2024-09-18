@@ -4,6 +4,9 @@ let jumpToTime;
 
 async function getCachefile(url) {
     const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Fetch failed (${response.status})`);
+    }
     return response.text();
 }
 
@@ -541,6 +544,9 @@ function setListeners() {
 }
 
 async function main(url) {
+    if (!url) {
+        return;
+    }
     const data = await parse(url);
     setListeners();
     displayMetadata(data);
