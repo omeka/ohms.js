@@ -557,12 +557,11 @@ function setListeners() {
     });
 }
 
-async function main(url) {
+async function main(url, translate) {
     if (!url) {
         return;
     }
     const data = await parse(url);
-    const translate = false;
     setListeners();
     displayMetadata(data);
     displayMedia(data);

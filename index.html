@@ -107,6 +107,6 @@ h1 {
 </body>
 <script>
     let params = new URLSearchParams(window.location.search);
-    main(params.get('cachefile'));
+    main(params.get('cachefile'), params.get('translate') === '1');
 </script>
 </html>
