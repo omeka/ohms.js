@@ -458,6 +458,33 @@ function displayMedia(data) {
             }
 
             break;
+        case 'other':
+            if (data.media_url) {
+                const absRegex = /^https?:\/\//i
+                let src = data.media_url;
+                let mediaElement = 'video';
+                if (!absRegex.test(src)) {
+                    src = 'http://' + src;
+                }
+
+                if (data.media_clip_format === 'audio') {
+                    mediaElement = 'audio';
+                    document.querySelector('#viewer').classList.add('audio');
+                }
+
+                const media = document.createElement(mediaElement);
+                media.src = src;
+                media.controls = true;
+                media.preload = 'auto';
+
+                jumpToTime = (seconds) => {
+                    media.pause();
+                    media.currentTime = seconds;
+                    media.play();
+                };
+                player.appendChild(media);
+            }
+            break;
     }
 }
 

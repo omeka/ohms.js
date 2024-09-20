@@ -33,6 +33,12 @@ h1 {
         "player player" minmax(200px, 1fr)
         "transcript index" minmax(200px, 2fr) / 3fr 2fr;
 }
+#viewer.audio {
+    grid-template:
+        "meta meta" min-content
+        "player player" min-content
+        "transcript index" minmax(200px, 2fr) / 3fr 2fr;
+}
 #main-metadata {
     text-align: center;
     grid-area: meta;
@@ -75,6 +81,16 @@ h1 {
     max-width: 100% !important;
     margin: 0 auto;
     border: none;
+}
+#player video {
+    display: block;
+    height: 100%;
+    margin: 0 auto;
+}
+#player audio {
+    display: block;
+    margin: 0 auto;
+    width: 75%;
 }
 .timestamp-link, .index-link {
     font-family: sans-serif;
