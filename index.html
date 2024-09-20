@@ -52,6 +52,22 @@ h1 {
 #index {
     grid-area: index;
 }
+#viewer.no-transcript  #index {
+    grid-column-start: transcript;
+    max-width: 60ch;
+    justify-self: center;
+}
+#viewer.no-transcript #transcript-window {
+    display: none;
+}
+#viewer.no-index #index {
+    display: none;
+}
+#viewer.no-index #transcript-window {
+    grid-column-end: index;
+    max-width: 90ch;
+    justify-self: center;
+}
 #transcript {
     position: relative;
     margin-left: 10ch;

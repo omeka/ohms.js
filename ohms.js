@@ -605,8 +605,14 @@ async function main(url, translate) {
     }
     if (vttTranscript) {
         displayVttTranscript(vttTranscript, data.index_points);
-    } else {
+    } else if (transcript) {
         displayTranscript(transcript, sync, data.index_points);
+    } else {
+        document.querySelector('#viewer').classList.add('no-transcript');
     }
-    displayIndex(data.index_points, translate);
+    if (data.index_points.length) {
+        displayIndex(data.index_points, translate);
+    } else {
+        document.querySelector('#viewer').classList.add('no-index');
+    }
 }
