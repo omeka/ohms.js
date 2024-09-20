@@ -584,13 +584,15 @@ function setListeners() {
     });
 }
 
-async function main(url, translate) {
+async function main(url, translate, showMetadata) {
     if (!url) {
         return;
     }
     const data = await parse(url);
     setListeners();
-    displayMetadata(data);
+    if (showMetadata) {
+        displayMetadata(data);
+    }
     displayMedia(data);
 
     let transcript, vttTranscript, sync;
