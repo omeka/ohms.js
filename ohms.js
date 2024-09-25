@@ -161,7 +161,6 @@ function displayTranscript(transcript, sync, indexPoints) {
         if (typeof indexPoint === 'number') {
             span.appendChild(createElement('a', {
                 href: '#index-point-' + indexPoint,
-                textContent: 'i',
                 className: 'index-link',
                 id: 'transcript-index-point-' + indexPoint,
             }));
@@ -502,9 +501,10 @@ function displayIndex(indexPoints, translate) {
     const index = document.querySelector('#index');
     const frag = document.createDocumentFragment();
     indexPoints.forEach((indexPoint, i) => {
+        const indexId = 'index-point-' + i;
         const div = createElement('div', {
             className: 'index-point',
-            id: 'index-point-' + i,
+            id: indexId,
         });
 
         div.appendChild(createElement('span', {
@@ -512,32 +512,55 @@ function displayIndex(indexPoints, translate) {
             textContent: indexPoint[titleKey],
         }));
 
-        div.appendChild(createElement('a', {
+        const indexActions = createElement('div', {
+            className: 'index-actions'
+        });
+
+
+        indexActions.appendChild(createElement('a', {
             dataset: {seconds: indexPoint.time},
             className: 'timestamp-link',
             textContent: formatTime(indexPoint.time),
             href: '#',
         }));
 
-        div.appendChild(createElement('a', {
+        indexActions.appendChild(createElement('a', {
             href: '#transcript-index-point-' + i,
             className: 'transcript-index-link',
-            textContent: 'View in transcript',
+            textContent: '',
+            ariaLabel: 'View in transcript',
+            title: 'View in transcript',
         }));
 
+        indexActions.appendChild(createElement('button', {
+            type: 'button',
+            className: 'transcript-index-text-toggle',
+            ariaLabel: 'Toggle',
+            title: 'Toggle',
+            ariaExpanded: 'false',
+        }));
+
+        div.appendChild(indexActions);
+
+        const divContent = createElement('div', {
+            className: 'index-point-content',
+        });
+
         if (indexPoint.partial_transcript) {
-            div.appendChild(createElement('blockquote', {
+            divContent.appendChild(createElement('blockquote', {
                 className: 'index-partial-transcript',
                 textContent: indexPoint[partialTranscriptKey],
             }));
         }
 
         if (indexPoint.synopsis) {
-            div.appendChild(createElement('span', {
+            divContent.appendChild(createElement('span', {
                 className: 'index-synopsis',
                 textContent: indexPoint[synopsisKey],
             }));
         }
+
+        div.appendChild(divContent);
         frag.appendChild(div);
     });
     index.appendChild(frag);
@@ -614,6 +637,22 @@ async function main(url, translate, showMetadata) {
     }
     if (data.index_points.length) {
         displayIndex(data.index_points, translate);
+        let indexPoints, toggleButton;
+        indexPoints = document.getElementsByClassName('index-point');
+        for (const indexPoint of indexPoints) {
+            toggleButton = indexPoint.querySelector('.transcript-index-text-toggle');
+            toggleButton.addEventListener('click', (e) => {
+                const indexPointText = indexPoint.getElementsByClassName('index-point-content')[0];
+                toggleButton = e.target;
+                if (indexPointText.matches('.active')) {
+                    indexPointText.classList.remove('active');
+                    toggleButton.classList.remove('active');
+                } else {
+                    indexPointText.classList.add('active');
+                    toggleButton.classList.add('active');
+                }
+            });
+        }
     } else {
         document.querySelector('#viewer').classList.add('no-index');
     }
