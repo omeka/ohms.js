@@ -607,11 +607,34 @@ function setListeners() {
     });
 }
 
+function setUpControls() {
+    const controls = document.querySelector('#controls');
+    if (document.fullscreenEnabled) {
+        const fullscreenButton = createElement('button', {
+            id: 'fullscreen',
+            type: 'button',
+            textContent: 'Fullscreen',
+        });
+        fullscreenButton.addEventListener('click', async (e) => {
+            e.preventDefault();
+            if (document.fullscreenElement) {
+                await document.exitFullscreen();
+                fullscreenButton.textContent = 'Fullscreen';
+            } else {
+                await document.body.requestFullscreen();
+                fullscreenButton.textContent = 'Exit Fullscreen';
+            }
+        });
+        controls.appendChild(fullscreenButton);
+    }
+}
+
 async function main(url, translate, showMetadata) {
     if (!url) {
         return;
     }
     const data = await parse(url);
+    setUpControls();
     setListeners();
     if (showMetadata) {
         displayMetadata(data);

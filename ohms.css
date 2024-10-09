@@ -44,6 +44,9 @@ body {
     font-size: 14px;
     margin: 0;
 }
+body::backdrop {
+    background: #fff;
+}
 blockquote {
     font-size: 15px;
     font-style: italic;
@@ -85,6 +88,12 @@ h1 {
 
 #main-metadata:empty {
     padding: 0;
+}
+
+#controls {
+    position: absolute;
+    top: 1em;
+    right: 1em;
 }
 
 #player {
