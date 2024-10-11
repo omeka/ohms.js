@@ -75,10 +75,26 @@ async function parse(url) {
                 gps_text_alt: getChildText(gpspoint, 'gps_text_alt').trim(),
             };
         });
+        const hyperlinks = point.querySelectorAll(':scope > hyperlinks');
+        pointData.hyperlinks = Array.from(hyperlinks, (hyperlink) => {
+            return {
+                hyperlink: getChildText(hyperlink, 'hyperlink').trim(),
+                hyperlink_text: getChildText(hyperlink, 'hyperlink_text').trim(),
+                hyperlink_text_alt: getChildText(hyperlink, 'hyperlink_text_alt').trim(),
+            };
+        });
         return pointData;
     });
 
     return data;
+}
+
+function ensureAbsolute(url) {
+    const absRegex = /^https?:\/\//i;
+    if (!absRegex.test(url)) {
+        return 'http://' + url;
+    }
+    return url;
 }
 
 function getChildText(element, childName) {
@@ -232,7 +248,6 @@ function extractFootnotes(transcript) {
     const regex = /\[\[footnotes\]\](.*)\[\[\/footnotes\]\]/s;
     const noteRegex = /\[\[note\]\](.*?)\[\[\/note\]\]/sg;
     const noteLinkRegex = /\[\[link\]\](.*?)\[\[\/link\]\]/s;
-    const urlRegex = /^https?:\/\//;
     const matches = transcript.split(regex);
     if (matches.length === 1) {
         return [transcript, null];
@@ -261,11 +276,8 @@ function extractFootnotes(transcript) {
                 return '';
             });
             if (noteUrl) {
-                if (!urlRegex.test(noteUrl)) {
-                    noteUrl = 'http://' + noteUrl;
-                }
                 footnote.appendChild(createElement('a', {
-                    href: noteUrl,
+                    href: ensureAbsolute(noteUrl),
                     textContent: noteContents.trim(),
                 }));
             } else {
@@ -459,12 +471,7 @@ function displayMedia(data) {
             break;
         case 'other':
             if (data.media_url) {
-                const absRegex = /^https?:\/\//i
-                let src = data.media_url;
                 let mediaElement = 'video';
-                if (!absRegex.test(src)) {
-                    src = 'http://' + src;
-                }
 
                 if (data.media_clip_format === 'audio') {
                     mediaElement = 'audio';
@@ -472,7 +479,7 @@ function displayMedia(data) {
                 }
 
                 const media = document.createElement(mediaElement);
-                media.src = src;
+                media.src = ensureAbsolute(data.media_url);
                 media.controls = true;
                 media.preload = 'auto';
 
@@ -554,27 +561,9 @@ function displayIndex(indexPoints, translate) {
             }));
         }
 
-        if (indexPoint[translateKey('keywords')]) {
-            const keywords = createElement('div', {
-                className: 'index-keywords',
-            });
-            keywords.appendChild(createElement('b', {
-                textContent: 'Keywords:',
-            }));
-            keywords.appendChild(document.createTextNode(' ' + indexPoint[translateKey('keywords')].replaceAll(';', '; ')));
-            divContent.appendChild(keywords);
-        }
-
-        if (indexPoint[translateKey('subjects')]) {
-            const subjects = createElement('div', {
-                className: 'index-subjects',
-            });
-            subjects.appendChild(createElement('b', {
-                textContent: 'Subjects:',
-            }));
-            subjects.appendChild(document.createTextNode(' ' + indexPoint[translateKey('subjects')].replaceAll(';', '; ')));
-            divContent.appendChild(subjects);
-        }
+        const indexPointMetadata = [];
+        indexPointMetadata.push(['index-keywords', 'Keywords', indexPoint[translateKey('keywords')].split(';')]);
+        indexPointMetadata.push(['index-subjects', 'Subjects', indexPoint[translateKey('subjects')].split(';')]);
 
         const mapLinks = [];
         indexPoint.gps_points.forEach((gpsPoint) => {
@@ -591,21 +580,38 @@ function displayIndex(indexPoints, translate) {
                 textContent: text,
             }));
         });
-        if (mapLinks.length) {
-            const locations = createElement('div', {
-                className: 'index-locations',
-            });
-            let separator = ' ';
-            locations.appendChild(createElement('b', {
-                textContent: 'Locations:',
+        indexPointMetadata.push(['index-locations', 'Locations', mapLinks]);
+
+        const links = [];
+        indexPoint.hyperlinks.forEach((hyperlink) => {
+            if (!hyperlink.hyperlink) {
+                return;
+            }
+            links.push(createElement('a', {
+                href: ensureAbsolute(hyperlink.hyperlink),
+                target: '_blank',
+                textContent: hyperlink[translateKey('hyperlink_text')] || hyperlink.hyperlink,
             }));
-            mapLinks.forEach((mapLink) => {
-                locations.appendChild(document.createTextNode(separator));
-                locations.appendChild(mapLink);
-                separator = ', ';
+        });
+        indexPointMetadata.push(['index-hyperlinks', 'Links', links]);
+
+        indexPointMetadata.forEach((metadataInfo) => {
+            const [className, label, data] = metadataInfo;
+            if (!data.length) {
+                return;
+            }
+
+            const container = document.createElement('div');
+            container.classList.add('index-meta', className);
+            container.appendChild(createElement('b', {textContent: label + ":"}));
+
+            let separator = ' ';
+            data.forEach((datum) => {
+                container.append(separator, datum);
+                separator = '; ';
             });
-            divContent.append(locations);
-        }
+            divContent.appendChild(container);
+        });
 
         div.appendChild(divContent);
         frag.appendChild(div);
