@@ -57,22 +57,22 @@ async function parse(url) {
             time: parseInt(getChildText(point, 'time'), 10),
             title: getChildText(point, 'title'),
             title_alt: getChildText(point, 'title_alt'),
-            partial_transcript: getChildText(point, 'partial_transcript'),
-            partial_transcript_alt: getChildText(point, 'partial_transcript_alt'),
-            synopsis: getChildText(point, 'synopsis'),
-            synopsis_alt: getChildText(point, 'synopsis_alt'),
-            keywords: getChildText(point, 'keywords'),
-            keywords_alt: getChildText(point, 'keywords_alt'),
-            subjects: getChildText(point, 'subjects'),
-            subjects_alt: getChildText(point, 'subjects_alt'),
+            partial_transcript: getChildText(point, 'partial_transcript').trim(),
+            partial_transcript_alt: getChildText(point, 'partial_transcript_alt').trim(),
+            synopsis: getChildText(point, 'synopsis').trim(),
+            synopsis_alt: getChildText(point, 'synopsis_alt').trim(),
+            keywords: getChildText(point, 'keywords').trim(),
+            keywords_alt: getChildText(point, 'keywords_alt').trim(),
+            subjects: getChildText(point, 'subjects').trim(),
+            subjects_alt: getChildText(point, 'subjects_alt').trim(),
         };
         const gpsPoints = point.querySelectorAll(':scope > gpspoints');
         pointData.gps_points = Array.from(gpsPoints, (gpspoint) => {
             return {
-                gps: getChildText(gpspoint, 'gps'),
-                gps_zoom: getChildText(gpspoint, 'gps_zoom'),
-                gps_text: getChildText(gpspoint, 'gps_text'),
-                gps_text_alt: getChildText(gpspoint, 'gps_text_alt'),
+                gps: getChildText(gpspoint, 'gps').trim(),
+                gps_zoom: getChildText(gpspoint, 'gps_zoom').trim(),
+                gps_text: getChildText(gpspoint, 'gps_text').trim(),
+                gps_text_alt: getChildText(gpspoint, 'gps_text_alt').trim(),
             };
         });
         return pointData;
@@ -488,15 +488,21 @@ function displayMedia(data) {
 }
 
 function displayIndex(indexPoints, translate) {
-    let titleKey, partialTranscriptKey, synopsisKey;
+    let titleKey, partialTranscriptKey, synopsisKey, keywordsKey, subjectsKey, gpsTextKey;
     if (translate) {
         titleKey = 'title_alt';
         partialTranscriptKey = 'partial_transcript_alt';
         synopsisKey = 'synopsis_alt';
+        keywordsKey = 'keywords_alt';
+        subjectsKey = 'subjects_alt';
+        gpsTextKey = 'gps_text_alt';
     } else {
         titleKey = 'title';
         partialTranscriptKey = 'partial_transcript';
         synopsisKey = 'synopsis';
+        keywordsKey = 'keywords';
+        subjectsKey = 'subjects';
+        gpsTextKey = 'gps_text';
     }
     const index = document.querySelector('#index');
     const frag = document.createDocumentFragment();
@@ -558,6 +564,59 @@ function displayIndex(indexPoints, translate) {
                 className: 'index-synopsis',
                 textContent: indexPoint[synopsisKey],
             }));
+        }
+
+        if (indexPoint[keywordsKey]) {
+            const keywords = createElement('div', {
+                className: 'index-keywords',
+            });
+            keywords.appendChild(createElement('b', {
+                textContent: 'Keywords:',
+            }));
+            keywords.appendChild(document.createTextNode(' ' + indexPoint[keywordsKey].replaceAll(';', '; ')));
+            divContent.appendChild(keywords);
+        }
+
+        if (indexPoint[subjectsKey]) {
+            const subjects = createElement('div', {
+                className: 'index-subjects',
+            });
+            subjects.appendChild(createElement('b', {
+                textContent: 'Subjects:',
+            }));
+            subjects.appendChild(document.createTextNode(' ' + indexPoint[subjectsKey].replaceAll(';', '; ')));
+            divContent.appendChild(subjects);
+        }
+
+        const mapLinks = [];
+        indexPoint.gps_points.forEach((gpsPoint) => {
+            if (!gpsPoint.gps) {
+                return;
+            }
+            const zoom = gpsPoint.gps_zoom || '17';
+            const text = gpsPoint[gpsTextKey] || 'View on map';
+            const mapUrl = 'https://maps.google.com/maps?ll=' + gpsPoint.gps + '&z=' + zoom + '&t=m';
+
+            mapLinks.push(createElement('a', {
+                href: mapUrl,
+                target: '_blank',
+                textContent: text,
+            }));
+        });
+        if (mapLinks.length) {
+            const locations = createElement('div', {
+                className: 'index-locations',
+            });
+            let separator = ' ';
+            locations.appendChild(createElement('b', {
+                textContent: 'Locations:',
+            }));
+            mapLinks.forEach((mapLink) => {
+                locations.appendChild(document.createTextNode(separator));
+                locations.appendChild(mapLink);
+                separator = ', ';
+            });
+            divContent.append(locations);
         }
 
         div.appendChild(divContent);
