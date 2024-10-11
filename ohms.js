@@ -488,24 +488,12 @@ function displayMedia(data) {
 }
 
 function displayIndex(indexPoints, translate) {
-    let titleKey, partialTranscriptKey, synopsisKey, keywordsKey, subjectsKey, gpsTextKey;
-    if (translate) {
-        titleKey = 'title_alt';
-        partialTranscriptKey = 'partial_transcript_alt';
-        synopsisKey = 'synopsis_alt';
-        keywordsKey = 'keywords_alt';
-        subjectsKey = 'subjects_alt';
-        gpsTextKey = 'gps_text_alt';
-    } else {
-        titleKey = 'title';
-        partialTranscriptKey = 'partial_transcript';
-        synopsisKey = 'synopsis';
-        keywordsKey = 'keywords';
-        subjectsKey = 'subjects';
-        gpsTextKey = 'gps_text';
-    }
     const index = document.querySelector('#index');
     const frag = document.createDocumentFragment();
+    const translateKey = (key) => {
+       return translate ? key + '_alt' : key;
+    };
+
     indexPoints.forEach((indexPoint, i) => {
         const indexId = 'index-point-' + i;
         const div = createElement('div', {
@@ -515,7 +503,7 @@ function displayIndex(indexPoints, translate) {
 
         div.appendChild(createElement('span', {
             className: 'index-title',
-            textContent: indexPoint[titleKey],
+            textContent: indexPoint[translateKey('title')],
         }));
 
         const indexActions = createElement('div', {
@@ -552,39 +540,39 @@ function displayIndex(indexPoints, translate) {
             className: 'index-point-content',
         });
 
-        if (indexPoint.partial_transcript) {
+        if (indexPoint[translateKey('partial_transcript')]) {
             divContent.appendChild(createElement('blockquote', {
                 className: 'index-partial-transcript',
-                textContent: indexPoint[partialTranscriptKey],
+                textContent: indexPoint[translateKey('partial_transcript')],
             }));
         }
 
-        if (indexPoint.synopsis) {
+        if (indexPoint[translateKey('synopsis')]) {
             divContent.appendChild(createElement('span', {
                 className: 'index-synopsis',
-                textContent: indexPoint[synopsisKey],
+                textContent: indexPoint[translateKey('synopsis')],
             }));
         }
 
-        if (indexPoint[keywordsKey]) {
+        if (indexPoint[translateKey('keywords')]) {
             const keywords = createElement('div', {
                 className: 'index-keywords',
             });
             keywords.appendChild(createElement('b', {
                 textContent: 'Keywords:',
             }));
-            keywords.appendChild(document.createTextNode(' ' + indexPoint[keywordsKey].replaceAll(';', '; ')));
+            keywords.appendChild(document.createTextNode(' ' + indexPoint[translateKey('keywords')].replaceAll(';', '; ')));
             divContent.appendChild(keywords);
         }
 
-        if (indexPoint[subjectsKey]) {
+        if (indexPoint[translateKey('subjects')]) {
             const subjects = createElement('div', {
                 className: 'index-subjects',
             });
             subjects.appendChild(createElement('b', {
                 textContent: 'Subjects:',
             }));
-            subjects.appendChild(document.createTextNode(' ' + indexPoint[subjectsKey].replaceAll(';', '; ')));
+            subjects.appendChild(document.createTextNode(' ' + indexPoint[translateKey('subjects')].replaceAll(';', '; ')));
             divContent.appendChild(subjects);
         }
 
@@ -594,7 +582,7 @@ function displayIndex(indexPoints, translate) {
                 return;
             }
             const zoom = gpsPoint.gps_zoom || '17';
-            const text = gpsPoint[gpsTextKey] || 'View on map';
+            const text = gpsPoint[translateKey('gps_text')] || 'View on map';
             const mapUrl = 'https://maps.google.com/maps?ll=' + gpsPoint.gps + '&z=' + zoom + '&t=m';
 
             mapLinks.push(createElement('a', {
