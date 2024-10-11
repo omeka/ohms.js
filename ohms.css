@@ -80,10 +80,11 @@ h1 {
         "player player" min-content
         "transcript index" minmax(200px, 2fr) / 3fr 2fr;
 }
+
 #main-metadata {
     text-align: center;
     grid-area: meta;
-    padding-bottom: 1em;
+    padding: 0 3em 1em;
 }
 
 #main-metadata:empty {
@@ -211,8 +212,7 @@ h1 {
     z-index: -1;
 }
 
-.index-link:before,
-.transcript-index-link:before {
+.fa:before {
     content: "\f02e";
     font-family: "Font Awesome 5 Free";
     font-weight: 900;
@@ -242,10 +242,26 @@ h1 {
 
 .transcript-index-text-toggle:before {
     content: "\f0da";
-    font-family: "Font Awesome 5 Free";
-    font-weight: 900;
 }
 
 .transcript-index-text-toggle.active:before {
     content: "\f0d7";
+}
+
+#fullscreen {
+    appearance: none;
+    background-color: var(--link-color);
+    color: #fff;
+    cursor: pointer;
+    border: 0;
+    border-radius: 2px;
+    padding: .125rem .25rem;
+}
+
+.enter-fullscreen:before {
+    content: "\f424";
+}
+
+.exit-fullscreen:before {
+    content: "\f422";
 }

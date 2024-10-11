@@ -161,7 +161,7 @@ function displayTranscript(transcript, sync, indexPoints) {
         if (typeof indexPoint === 'number') {
             span.appendChild(createElement('a', {
                 href: '#index-point-' + indexPoint,
-                className: 'index-link',
+                className: 'fa index-link',
                 id: 'transcript-index-point-' + indexPoint,
             }));
         }
@@ -526,7 +526,7 @@ function displayIndex(indexPoints, translate) {
 
         indexActions.appendChild(createElement('a', {
             href: '#transcript-index-point-' + i,
-            className: 'transcript-index-link',
+            className: 'fa transcript-index-link',
             textContent: '',
             ariaLabel: 'View in transcript',
             title: 'View in transcript',
@@ -534,7 +534,7 @@ function displayIndex(indexPoints, translate) {
 
         indexActions.appendChild(createElement('button', {
             type: 'button',
-            className: 'transcript-index-text-toggle',
+            className: 'fa transcript-index-text-toggle',
             ariaLabel: 'Toggle',
             title: 'Toggle',
             ariaExpanded: 'false',
@@ -612,17 +612,23 @@ function setUpControls() {
     if (document.fullscreenEnabled) {
         const fullscreenButton = createElement('button', {
             id: 'fullscreen',
+            className: 'fa enter-fullscreen',
             type: 'button',
-            textContent: 'Fullscreen',
+            ariaLabel: 'Fullscreen',
+            title: 'Fullscreen'
         });
         fullscreenButton.addEventListener('click', async (e) => {
             e.preventDefault();
             if (document.fullscreenElement) {
                 await document.exitFullscreen();
-                fullscreenButton.textContent = 'Fullscreen';
+                fullscreenButton.ariaLabel = 'Fullscreen';
+                fullscreenButton.title = 'Fullscreen';
+                fullscreenButton.className = 'fa enter-fullscreen';
             } else {
                 await document.body.requestFullscreen();
-                fullscreenButton.textContent = 'Exit Fullscreen';
+                fullscreenButton.ariaLabel = 'Exit Fullscreen';
+                fullscreenButton.title = 'Exit Fullscreen';
+                fullscreenButton.className = 'fa exit-fullscreen';
             }
         });
         controls.appendChild(fullscreenButton);
