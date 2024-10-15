@@ -248,6 +248,12 @@ h1 {
     content: "\f0d7";
 }
 
+.index-partial-transcript,
+.index-meta,
+.index-synopsis {
+    margin: 1em 0;
+}
+
 #controls button {
     appearance: none;
     background-color: var(--link-color);
