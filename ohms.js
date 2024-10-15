@@ -142,7 +142,6 @@ function formatTime(seconds) {
 function displayTranscript(transcript, sync, indexPoints) {
     const [realTranscript, footnoteContainer] = extractFootnotes(transcript);
     const lines = realTranscript.split('\n');
-    const transcriptContainer = document.querySelector('#transcript');
     const frag = document.createDocumentFragment();
     const speakerRegex = /^\s*([A-Z-.\' ]+:)(.*)$/;
     const footnoteRegex = /\[\[footnote\]\]([0-9]+?)\[\[\/footnote\]\]/;
@@ -209,10 +208,10 @@ function displayTranscript(transcript, sync, indexPoints) {
             paraNew = false;
         }
     });
-    transcriptContainer.appendChild(frag);
     if (footnoteContainer) {
-        transcriptContainer.appendChild(footnoteContainer);
+        frag.appendChild(footnoteContainer);
     }
+    return frag;
 }
 
 function getIndexLines(syncData, indexPoints) {
@@ -327,8 +326,7 @@ function displayVttTranscript(vttTranscript, indexPoints) {
         para.appendChild(span);
         frag.appendChild(para);
     }
-
-    document.querySelector('#transcript').appendChild(frag);
+    return frag;
 }
 
 function parseVttTimestamp(timestamp) {
@@ -495,7 +493,6 @@ function displayMedia(data) {
 }
 
 function displayIndex(indexPoints, translate) {
-    const index = document.querySelector('#index');
     const frag = document.createDocumentFragment();
     const translateKey = (key) => {
        return translate ? key + '_alt' : key;
@@ -616,7 +613,7 @@ function displayIndex(indexPoints, translate) {
         div.appendChild(divContent);
         frag.appendChild(div);
     });
-    index.appendChild(frag);
+    return frag;
 }
 
 function displayMetadata(data) {
@@ -633,6 +630,36 @@ function displayMetadata(data) {
     }));
 
     metadata.appendChild(frag);
+}
+
+function displayTextContent(data, translate) {
+    const viewer = document.querySelector('#viewer');
+    const transcriptContainer = document.querySelector('#transcript');
+    const indexContainer = document.querySelector('#index');
+    viewer.classList.remove('no-transcript', 'no-index');
+    let transcript, vttTranscript, sync;
+    if (translate) {
+        transcript = data.transcript_alt;
+        vttTranscript = data.vtt_transcript_alt;
+        sync = data.sync_alt;
+    } else {
+        transcript = data.transcript;
+        vttTranscript = data.vtt_transcript;
+        sync = data.sync;
+    }
+    if (vttTranscript) {
+        transcriptContainer.replaceChildren(displayVttTranscript(vttTranscript, data.index_points));
+    } else if (transcript) {
+        transcriptContainer.replaceChildren(displayTranscript(transcript, sync, data.index_points));
+    } else {
+        transcriptContainer.replaceChildren();
+        viewer.classList.add('no-transcript');
+    }
+    if (data.index_points.length) {
+        indexContainer.replaceChildren(displayIndex(data.index_points, translate));
+    } else {
+        indexContainer.replaceChildren(viewer.classList.add('no-index'));
+    }
 }
 
 function createElement(tagName, properties) {
@@ -665,8 +692,30 @@ function setListeners() {
     });
 }
 
-function setUpControls() {
+function setUpControls(data) {
     const controls = document.querySelector('#controls');
+    if (data.translate === '1') {
+        const translateLabelStem = 'Swap Language to ';
+        const originalLangLabel = translateLabelStem + (data.language || 'Original');
+        const alternateLangLabel = translateLabelStem + (data.transcript_alt_lang || 'Alternate');
+        let translating = false;
+        const translateButton = createElement('button', {
+            id: 'swap-language',
+            className: 'fa',
+            type: 'button',
+            ariaLabel: alternateLangLabel,
+            title: alternateLangLabel,
+        });
+        translateButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            translating = !translating;
+            const currentLabel = translating ? originalLangLabel : alternateLangLabel;
+            translateButton.ariaLabel = currentLabel;
+            translateButton.title = currentLabel;
+            displayTextContent(data, translating);
+        });
+        controls.appendChild(translateButton);
+    }
     if (document.fullscreenEnabled) {
         const fullscreenButton = createElement('button', {
             id: 'fullscreen',
@@ -693,38 +742,16 @@ function setUpControls() {
     }
 }
 
-async function main(url, translate, showMetadata) {
+async function main(url, showMetadata) {
     if (!url) {
         return;
     }
     const data = await parse(url);
-    setUpControls();
+    setUpControls(data);
     setListeners();
     if (showMetadata) {
         displayMetadata(data);
     }
     displayMedia(data);
-
-    let transcript, vttTranscript, sync;
-    if (translate) {
-        transcript = data.transcript_alt;
-        vttTranscript = data.vtt_transcript_alt;
-        sync = data.sync_alt;
-    } else {
-        transcript = data.transcript;
-        vttTranscript = data.vtt_transcript;
-        sync = data.sync;
-    }
-    if (vttTranscript) {
-        displayVttTranscript(vttTranscript, data.index_points);
-    } else if (transcript) {
-        displayTranscript(transcript, sync, data.index_points);
-    } else {
-        document.querySelector('#viewer').classList.add('no-transcript');
-    }
-    if (data.index_points.length) {
-        displayIndex(data.index_points, translate);
-    } else {
-        document.querySelector('#viewer').classList.add('no-index');
-    }
+    displayTextContent(data, false);
 }

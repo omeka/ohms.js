@@ -248,7 +248,7 @@ h1 {
     content: "\f0d7";
 }
 
-#fullscreen {
+#controls button {
     appearance: none;
     background-color: var(--link-color);
     color: #fff;
@@ -256,6 +256,7 @@ h1 {
     border: 0;
     border-radius: 2px;
     padding: .125rem .25rem;
+    margin-left: .25rem;
 }
 
 .enter-fullscreen:before {
@@ -264,4 +265,8 @@ h1 {
 
 .exit-fullscreen:before {
     content: "\f422";
+}
+
+#swap-language:before {
+    content: "\f0ac";
 }
