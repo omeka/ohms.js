@@ -650,12 +650,17 @@ function createElement(tagName, properties) {
 function setListeners() {
     document.body.addEventListener('click', (e) => {
         const target = e.target;
-        if (!target.matches('a.timestamp-link')) {
+        if (target.matches('a.timestamp-link')) {
+            e.preventDefault();
+            if (jumpToTime && 'seconds' in target.dataset) {
+                jumpToTime(target.dataset.seconds);
+            }
             return;
         }
-        e.preventDefault();
-        if (jumpToTime && 'seconds' in target.dataset) {
-            jumpToTime(target.dataset.seconds);
+        if (target.matches('.transcript-index-text-toggle')) {
+            const indexPoint = target.closest('.index-point');
+            target.ariaExpanded = indexPoint.classList.toggle('active') ? 'true' : 'false';
+            return;
         }
     });
 }
@@ -719,22 +724,6 @@ async function main(url, translate, showMetadata) {
     }
     if (data.index_points.length) {
         displayIndex(data.index_points, translate);
-        let indexPoints, toggleButton;
-        indexPoints = document.getElementsByClassName('index-point');
-        for (const indexPoint of indexPoints) {
-            toggleButton = indexPoint.querySelector('.transcript-index-text-toggle');
-            toggleButton.addEventListener('click', (e) => {
-                const indexPointText = indexPoint.getElementsByClassName('index-point-content')[0];
-                toggleButton = e.target;
-                if (indexPointText.matches('.active')) {
-                    indexPointText.classList.remove('active');
-                    toggleButton.classList.remove('active');
-                } else {
-                    indexPointText.classList.add('active');
-                    toggleButton.classList.add('active');
-                }
-            });
-        }
     } else {
         document.querySelector('#viewer').classList.add('no-index');
     }
