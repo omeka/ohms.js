@@ -689,6 +689,14 @@ function setListeners() {
             target.ariaExpanded = indexPoint.classList.toggle('active') ? 'true' : 'false';
             return;
         }
+        if (target.matches('.index-link')) {
+            const indexPointId = target.getAttribute('href').replace('#', '');
+            const indexPoint = document.getElementById(indexPointId);
+            if (!indexPoint.classList.contains('active')) {
+                indexPoint.ariaExpanded = indexPoint.classList.add('active');
+            }
+            return;
+        }
     });
 }
 
