@@ -35,6 +35,10 @@
     left:-9999px
 }
 
+html {
+    overflow: hidden;
+}
+
 body {
     overflow-x: hidden;
 }
