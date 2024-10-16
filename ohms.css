@@ -280,3 +280,31 @@ h1 {
 #swap-language:before {
     content: "\f0ac";
 }
+
+#toggle-index {
+    display: none;
+}
+
+@media screen and (max-width: 699px) {
+    #toggle-index {
+        display: inline-block;
+    }
+
+    #transcript-window {
+        grid-area: transcript / transcript / index / index;
+    }
+
+    #index {
+        display: none;
+    }
+
+    .mobile-index-active #index {
+        grid-area: transcript / transcript / index / index;
+        display: block;
+        background: #fff;
+    }
+
+    .mobile-index-active #transcript-window {
+        display: none;
+    }
+}

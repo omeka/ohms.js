@@ -692,16 +692,33 @@ function setListeners() {
         if (target.matches('.index-link')) {
             const indexPointId = target.getAttribute('href').replace('#', '');
             const indexPoint = document.getElementById(indexPointId);
+            if (!document.body.classList.contains('mobile-index-active')) {
+                document.body.classList.add('mobile-index-active');
+            }
             if (!indexPoint.classList.contains('active')) {
                 indexPoint.ariaExpanded = indexPoint.classList.add('active');
             }
             return;
+        }
+        if (target.matches('.transcript-index-link') && document.body.classList.contains('mobile-index-active')) {
+            document.body.classList.remove('mobile-index-active');
         }
     });
 }
 
 function setUpControls(data) {
     const controls = document.querySelector('#controls');
+    const indexMobileButton = createElement('button', {
+        id: 'toggle-index',
+        className: 'fa',
+        type: 'button',
+        ariaLabel: 'Toggle indices',
+        title: 'Toggle indices',
+    })
+    indexMobileButton.addEventListener('click', async () => {
+        document.body.classList.toggle('mobile-index-active');
+    });
+    controls.appendChild(indexMobileButton);
     if (data.translate === '1') {
         const translateLabelStem = 'Swap Language to ';
         const originalLangLabel = translateLabelStem + (data.language || 'Original');
