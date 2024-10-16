@@ -178,6 +178,8 @@ function displayTranscript(transcript, sync, indexPoints) {
                 href: '#index-point-' + indexPoint,
                 className: 'fa index-link',
                 id: 'transcript-index-point-' + indexPoint,
+                ariaLabel: 'Read index notes',
+                title: 'Read index notes'
             }));
         }
         if (paraNew) {
