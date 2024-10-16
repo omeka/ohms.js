@@ -76,6 +76,7 @@ h1 {
     grid-template:
         "meta meta" min-content
         "player player" minmax(200px, 1fr)
+        "controls controls" min-content
         "transcript index" minmax(200px, 2fr) / 3fr 2fr;
 }
 #viewer.audio {
@@ -92,13 +93,14 @@ h1 {
 }
 
 #main-metadata:empty {
-    min-height: 2.5em;
+    padding: 0;
 }
 
 #controls {
-    position: absolute;
-    top: 1em;
-    right: 1em;
+    grid-area: controls;
+    border-bottom: 1px solid var(--border-color);
+    padding: .5em 1em;
+    text-align: right;
 }
 
 #player {
