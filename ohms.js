@@ -574,8 +574,8 @@ function displayIndex(indexPoints, translate) {
         }
 
         const indexPointMetadata = [];
-        indexPointMetadata.push(['index-keywords', 'Keywords', indexPoint[translateKey('keywords')].split(';')]);
-        indexPointMetadata.push(['index-subjects', 'Subjects', indexPoint[translateKey('subjects')].split(';')]);
+        indexPointMetadata.push(['index-keywords', 'Keywords', indexPoint[translateKey('keywords')].split(';').filter((e) => e)]);
+        indexPointMetadata.push(['index-subjects', 'Subjects', indexPoint[translateKey('subjects')].split(';').filter((e) => e)]);
 
         const mapLinks = [];
         indexPoint.gps_points.forEach((gpsPoint) => {
