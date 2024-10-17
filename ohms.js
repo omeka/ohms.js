@@ -299,6 +299,7 @@ function displayVttTranscript(vttTranscript, indexPoints) {
     const frag = document.createDocumentFragment();
     const vttArray = vttTranscript.split(timingsRegex);
     let previousTimestamp = null;
+    let indexCounter = 0;
     for (let i = 1; i < vttArray.length; i+=2) {
         const timingsLine = vttArray[i];
         const caption = vttArray[i+1];
@@ -315,6 +316,18 @@ function displayVttTranscript(vttTranscript, indexPoints) {
                 className: 'timestamp-link',
             }));
             previousTimestamp = timestamp;
+
+            // treat index points within a second of the line start time as being on this line
+            while (indexCounter < indexPoints.length && indexPoints[indexCounter].time <= timestamp + 1) {
+                span.appendChild(createElement('a', {
+                    href: '#index-point-' + indexCounter,
+                    className: 'fa index-link',
+                    id: 'transcript-index-point-' + indexCounter,
+                    ariaLabel: 'Read index notes',
+                    title: 'Read index notes'
+                }));
+                indexCounter++;
+            }
         }
 
         caption.replace(postCueRegex, '').split(voiceTagRegex).forEach((captionText, j) => {
