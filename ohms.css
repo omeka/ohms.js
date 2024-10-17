@@ -228,6 +228,10 @@ h1 {
     width: .75rem;
 }
 
+#viewer.no-transcript .transcript-index-link {
+    display: none;
+}
+
 .index-actions {
     display: flex;
     gap: .5rem;
