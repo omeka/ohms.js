@@ -134,7 +134,7 @@ h1 {
 #index {
     grid-area: index;
     border-left: 1px solid var(--border-color);
-    background: linear-gradient(to right, rgba(0,0,0,.15), #fff 1rem);
+    background: linear-gradient(to right, rgba(0,0,0,.15), transparent 1rem);
     padding-top: 1em;
 }
 #viewer.no-transcript  #index {
