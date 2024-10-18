@@ -287,6 +287,10 @@ h1 {
     content: "\f0ac";
 }
 
+#show-info:before {
+    content: "\f129";
+}
+
 #toggle-index {
     display: none;
 }

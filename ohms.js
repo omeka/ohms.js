@@ -32,6 +32,7 @@ async function parse(url) {
         rights: getChildText(record, 'rights'),
         usage: getChildText(record, 'usage'),
         repository: getChildText(record, 'repository'),
+        repository_url: getChildText(record, 'repository_url'),
         kembed: getChildText(record, 'kembed'),
         language: getChildText(record, 'language'),
         transcript_alt_lang: getChildText(record, 'transcript_alt_lang'),
@@ -42,6 +43,8 @@ async function parse(url) {
         transcript_alt: getChildText(record, 'transcript_alt'),
         vtt_transcript: getChildText(record, 'vtt_transcript'),
         vtt_transcript_alt: getChildText(record, 'vtt_transcript_alt'),
+        interviewer: getChildrenTexts(record, 'interviewer'),
+        interviewee: getChildrenTexts(record, 'interviewee'),
     }
 
     const mediafile = record.querySelector('mediafile');
@@ -98,8 +101,13 @@ function ensureAbsolute(url) {
 }
 
 function getChildText(element, childName) {
-    const child = element.querySelector(':scope > ' + childName)
+    const child = element.querySelector(':scope > ' + childName);
     return child ? child.textContent : '';
+}
+
+function getChildrenTexts(element, childName) {
+    const children = element.querySelectorAll(':scope > ' + childName);
+    return Array.from(children, (child) => child.textContent);
 }
 
 function parseSyncString(sync) {
@@ -677,6 +685,59 @@ function displayTextContent(data, translate) {
     }
 }
 
+function displayInfo(data) {
+    const info = document.querySelector('#info-content');
+    const dl = document.createElement('dl');
+    const optionalLink = (text, url) => {
+        if (url) {
+            if (!text) {
+                text = url;
+            }
+            return createElement('a', {
+                textContent: text,
+                href: ensureAbsolute(url),
+                target: '_blank',
+            });
+        }
+        return text;
+    }
+    const infoMetadata = {
+        'Title': data.title,
+        'Repository': optionalLink(data.repository, data.repository_url),
+        'Collection': optionalLink(data.collection_name, data.collection_link),
+        'Series': optionalLink(data.series_name, data.series_link),
+        'Interviewee': data.interviewee,
+        'Interviewer': data.interviewer,
+        'Language': data.language,
+        'Alternate Language': data.transcript_alt_lang,
+        'Rights Statement': data.rights,
+        'Usage Statement': data.usage,
+        'Acknowledgment': data.funding,
+    };
+
+    for (const [label, value] of Object.entries(infoMetadata)) {
+        if (!value || (Array.isArray(value) && !value.length)) {
+            continue;
+        }
+
+        dl.appendChild(createElement('dt', {textContent: label}));
+
+        const appendValue = (value) => {
+            const dd = document.createElement('dd');
+            dd.append(value);
+            dl.appendChild(dd);
+        };
+
+        if (Array.isArray(value)) {
+            value.forEach(appendValue);
+        } else {
+            appendValue(value);
+        }
+    }
+
+    info.appendChild(dl);
+}
+
 function createElement(tagName, properties) {
     const element = document.createElement(tagName);
     if (Object.hasOwn(properties, 'dataset')) {
@@ -718,11 +779,15 @@ function setListeners() {
         if (target.matches('.transcript-index-link') && document.body.classList.contains('mobile-index-active')) {
             document.body.classList.remove('mobile-index-active');
         }
+        if (target.matches('#info-close')) {
+            document.querySelector('#info').close();
+        }
     });
 }
 
 function setUpControls(data) {
     const controls = document.querySelector('#controls');
+
     const indexMobileButton = createElement('button', {
         id: 'toggle-index',
         className: 'fa',
@@ -733,6 +798,19 @@ function setUpControls(data) {
         document.body.classList.toggle('mobile-index-active');
     });
     controls.appendChild(indexMobileButton);
+
+    const infoButton = createElement('button', {
+        id: 'show-info',
+        className: 'fa',
+        type: 'button',
+        ariaLabel: 'Show info',
+        title: 'Show info',
+    });
+    infoButton.addEventListener('click', () => {
+        document.querySelector('#info').showModal();
+    });
+    controls.appendChild(infoButton);
+
     if (data.translate === '1') {
         const translateLabelStem = 'Swap Language to ';
         const originalLangLabel = translateLabelStem + (data.language || 'Original');
@@ -793,4 +871,5 @@ async function main(url, showMetadata) {
     }
     displayMedia(data);
     displayTextContent(data, false);
+    displayInfo(data);
 }
