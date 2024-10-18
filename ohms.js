@@ -218,6 +218,7 @@ function displayTranscript(transcript, sync, indexPoints) {
             paraNew = false;
         }
     });
+    frag.appendChild(para);
     if (footnoteContainer) {
         frag.appendChild(footnoteContainer);
     }
