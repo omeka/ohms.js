@@ -727,8 +727,7 @@ function setUpControls(data) {
         id: 'toggle-index',
         className: 'fa',
         type: 'button',
-        ariaLabel: 'Toggle indices',
-        title: 'Toggle indices',
+        textContent: 'Toggle index'
     })
     indexMobileButton.addEventListener('click', async () => {
         document.body.classList.toggle('mobile-index-active');

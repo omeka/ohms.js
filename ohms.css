@@ -292,8 +292,19 @@ h1 {
 }
 
 @media screen and (max-width: 699px) {
-    #toggle-index {
+    #controls #toggle-index {
         display: inline-block;
+        background-color: #fff;
+        color: var(--link-color);
+    }
+
+    #toggle-index:before {
+        content: "\f204";
+        margin-right: .25em;
+    }
+
+    .mobile-index-active #toggle-index:before {
+        content: "\f205";
     }
 
     #transcript-window {
