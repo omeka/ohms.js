@@ -321,7 +321,8 @@ h1 {
 
 #info {
     padding: 1rem;
-    border: 1px solid var(--border-color);
+    border: 1rem solid transparent;
+    box-sizing: border-box;
 }
 
 #info-close {
