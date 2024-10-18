@@ -105,6 +105,8 @@ h1 {
     border-bottom: 1px solid var(--border-color);
     padding: .5em 1em;
     text-align: right;
+    display: flex;
+    justify-content: flex-end;
 }
 
 #player {
@@ -306,6 +308,7 @@ h1 {
         display: inline-block;
         background-color: #fff;
         color: var(--link-color);
+        margin-right: auto;
     }
 
     #toggle-index:before {
