@@ -29,6 +29,10 @@
     --link-color: #9d2963;
 }
 
+dialog::backdrop {
+    background: rgba(0, 0, 0, .6);
+}
+
 .screen-reader-text {
     position:absolute;
     top:-9999px;
@@ -57,6 +61,18 @@ blockquote {
     padding: .25em 0 .25em .5em;
     border-left: 4px solid #ddd;
     margin: 0;
+}
+
+dt {
+    font-weight: bold;
+}
+
+dd {
+    margin-left: 1.5rem;
+}
+
+dd + dt {
+    margin-top: .5rem;
 }
 
 a:link,
@@ -301,6 +317,25 @@ h1 {
 
 #toggle-index {
     display: none;
+}
+
+#info {
+    padding: 1rem;
+    margin: auto 1rem;
+    border: 1px solid var(--border-color);
+}
+
+#info-close {
+    appearance: none;
+    background-color: transparent;
+    color: var(--link-color);
+    border: 0;
+    float: right;
+    font-size: 20px;
+}
+
+#info-close:before {
+    content: "\f00d";
 }
 
 @media screen and (max-width: 699px) {
