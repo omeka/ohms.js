@@ -860,14 +860,20 @@ function setUpControls(data) {
     }
 }
 
-async function main(url, showMetadata) {
+async function main(params) {
+    const url = params.cachefile;
     if (!url) {
         return;
+    }
+
+    console.log(params);
+    if (params.link_color && /^[0-9A-Fa-f]{6}$/.test(params.link_color)) {
+        document.documentElement.style.setProperty('--link-color', '#' + params.link_color);
     }
     const data = await parse(url);
     setUpControls(data);
     setListeners();
-    if (showMetadata) {
+    if (params.metadata !== 'none') {
         displayMetadata(data);
     }
     displayMedia(data);

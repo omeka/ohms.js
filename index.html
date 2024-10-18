@@ -24,7 +24,6 @@
     </dialog>
 </body>
 <script>
-    let params = new URLSearchParams(window.location.search);
-    main(params.get('cachefile'), params.get('metadata') !== 'none');
+    main(Object.fromEntries(new URLSearchParams(window.location.search)));
 </script>
 </html>
