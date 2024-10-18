@@ -170,7 +170,7 @@ h1 {
 }
 
 #transcript-window, #index {
-    overflow-y: scroll;
+    overflow-y: auto;
     scroll-behavior: smooth;
     padding-right: 1em;
 }
