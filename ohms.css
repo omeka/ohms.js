@@ -103,6 +103,7 @@ h1 {
     grid-template:
         "meta meta" min-content
         "player player" min-content
+        "controls controls" min-content
         "transcript index" minmax(200px, 2fr) / 3fr 2fr;
 }
 
