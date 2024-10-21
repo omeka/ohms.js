@@ -370,6 +370,7 @@ h1 {
         grid-area: transcript / transcript / index / index;
     }
 
+    #viewer.no-index #controls #toggle-index,
     #index {
         display: none;
     }
