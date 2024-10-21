@@ -256,6 +256,11 @@ h1 {
     display: none;
 }
 
+#viewer.no-transcript #index {
+    border-left: 0;
+    background: none;
+}
+
 .index-actions {
     display: flex;
     gap: .5rem;
@@ -356,6 +361,10 @@ h1 {
         content: "\f205";
     }
 
+    #viewer.no-transcript #controls #toggle-index {
+        display: none;
+    }
+
     #transcript-window {
         grid-area: transcript / transcript / index / index;
     }
@@ -364,10 +373,13 @@ h1 {
         display: none;
     }
 
+    #viewer.no-transcript #index,
     .mobile-index-active #index {
         grid-area: transcript / transcript / index / index;
         display: block;
         background: #fff;
+        padding: 0;
+        max-width: none;
     }
 
     .mobile-index-active #transcript-window {
