@@ -51,6 +51,8 @@ body {
     font-family: Merriweather, Georgia, sans-serif;
     font-size: 14px;
     margin: 0;
+    background: #fff;
+    color: #000;
 }
 body::backdrop {
     background: #fff;
