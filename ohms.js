@@ -458,7 +458,7 @@ function displayMedia(data) {
                 const parser = new DOMParser();
                 const embedDoc = parser.parseFromString(data.kembed, 'text/html');
                 const iframe = embedDoc.querySelector('iframe');
-                const kalturaUrlRegex = /\/p\/([0-9]+)\/sp\/(?:[0-9]+)00\/embedIframeJs\/uiconf_id\/([0-9]+)\//;
+                const kalturaUrlRegex = /\/p\/([0-9]+)\/(sp\/(?:[0-9]+)00\/embedIframeJs|embedPlaykitJs)\/uiconf_id\/([0-9]+)(?:\/|$)/;
                 const iframeUrl = new URL(iframe.src);
                 const query = new URLSearchParams(iframeUrl.search);
                 const match = iframeUrl.pathname.match(kalturaUrlRegex);
@@ -466,28 +466,54 @@ function displayMedia(data) {
                     break;
                 }
                 const partnerId = match[1];
-                const uiconfId = match[2];
+                const maybePlaykit = match[2];
+                const uiconfId = match[3];
                 const entryId = query.get('entry_id');
 
-                const script = document.createElement('script');
-                script.src = `https://cdnapisec.kaltura.com/p/${partnerId}/sp/${partnerId}00/embedIframeJs/uiconf_id/${uiconfId}/partner_id/${partnerId}`;
-                script.addEventListener('load', () => {
-                    kWidget.embed({
-                        targetId: 'player',
-                        wid: '_' + partnerId,
-                        uiconf_id: uiconfId,
-                        entry_id: entryId,
-                        readyCallback: (playerId) => {
-                            const kdp = document.getElementById(playerId);
-
-                            jumpToTime = (seconds) => {
-                                kdp.sendNotification('doSeek', seconds);
-                                kdp.sendNotification('doPlay');
-                            };
+                if (maybePlaykit === 'embedPlaykitJs') {
+                    // "v7" player
+                    const script = document.createElement('script');
+                    script.src = `https://cdnapisec.kaltura.com/p/${partnerId}/embedPlaykitJs/uiconf_id/${uiconfId}`;
+                    script.addEventListener('load', async () => {
+                        let kalturaPlayer = KalturaPlayer.setup({
+                            targetId: 'player',
+                            provider: {
+                                partnerId,
+                                uiConfId: uiconfId
+                            },
+                            playback: {
+                                autoplay: false
+                            }
+                        });
+                        await kalturaPlayer.loadMedia({entryId});
+                        jumpToTime = (seconds) => {
+                            kalturaPlayer.currentTime = seconds;
+                            kalturaPlayer.play();
                         }
                     });
-                });
-                document.body.appendChild(script);
+                    document.body.appendChild(script);
+                } else {
+                    // "v2" player
+                    const script = document.createElement('script');
+                    script.src = `https://cdnapisec.kaltura.com/p/${partnerId}/sp/${partnerId}00/embedIframeJs/uiconf_id/${uiconfId}/partner_id/${partnerId}`;
+                    script.addEventListener('load', () => {
+                        kWidget.embed({
+                            targetId: 'player',
+                            wid: '_' + partnerId,
+                            uiconf_id: uiconfId,
+                            entry_id: entryId,
+                            readyCallback: (playerId) => {
+                                const kdp = document.getElementById(playerId);
+
+                                jumpToTime = (seconds) => {
+                                    kdp.sendNotification('doSeek', seconds);
+                                    kdp.sendNotification('doPlay');
+                                };
+                            }
+                        });
+                    });
+                    document.body.appendChild(script);
+                }
             }
 
             break;
@@ -757,7 +783,7 @@ function setListeners() {
         if (target.matches('a.timestamp-link')) {
             e.preventDefault();
             if (jumpToTime && 'seconds' in target.dataset) {
-                jumpToTime(target.dataset.seconds);
+                jumpToTime(parseInt(target.dataset.seconds, 10));
             }
             return;
         }
