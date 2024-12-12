@@ -373,190 +373,200 @@ function parseVttTimestamp(timestamp) {
     return (hours * 3600) + (minutes * 60) + seconds;
 }
 
+function embedAviary(player, data) {
+    const url = new URL(data.media_url);
+    if (!url.hostname.endsWith('.aviaryplatform.com')) {
+        console.error('aviary: media_url was not at expected domain');
+        return;
+    }
+    player.appendChild(createElement('iframe', {
+        src: data.media_url,
+        width: 480,
+        height: 270,
+    }));
+}
+
+function embedKaltura(player, data) {
+    if (!data.kembed) {
+        console.error('kaltura: no kembed');
+        return;
+    }
+    const parser = new DOMParser();
+    const embedDoc = parser.parseFromString(data.kembed, 'text/html');
+    const iframe = embedDoc.querySelector('iframe');
+    if (!iframe) {
+        console.error('kaltura: no iframe in kembed');
+        return;
+    }
+    const kalturaUrlRegex = /\/p\/([0-9]+)\/(sp\/(?:[0-9]+)00\/embedIframeJs|embedPlaykitJs)\/uiconf_id\/([0-9]+)(?:\/|$)/;
+    const iframeUrl = new URL(iframe.src);
+    const query = new URLSearchParams(iframeUrl.search);
+    const match = iframeUrl.pathname.match(kalturaUrlRegex);
+    if (!match || !query.has('entry_id')) {
+        console.error('kaltura: no Kaltura URL found');
+        return;
+    }
+    const partnerId = match[1];
+    const maybePlaykit = match[2];
+    const uiconfId = match[3];
+    const entryId = query.get('entry_id');
+
+    const script = document.createElement('script');
+    if (maybePlaykit === 'embedPlaykitJs') {
+        // "v7" player
+        script.src = `https://cdnapisec.kaltura.com/p/${partnerId}/embedPlaykitJs/uiconf_id/${uiconfId}`;
+        script.addEventListener('load', async () => {
+            let kalturaPlayer = KalturaPlayer.setup({
+                targetId: 'player',
+                provider: {
+                    partnerId,
+                    uiConfId: uiconfId
+                },
+                playback: {
+                    autoplay: false
+                }
+            });
+            await kalturaPlayer.loadMedia({entryId});
+            jumpToTime = (seconds) => {
+                kalturaPlayer.currentTime = seconds;
+                kalturaPlayer.play();
+            }
+        });
+    } else {
+        // "v2" player
+        script.src = `https://cdnapisec.kaltura.com/p/${partnerId}/sp/${partnerId}00/embedIframeJs/uiconf_id/${uiconfId}/partner_id/${partnerId}`;
+        script.addEventListener('load', () => {
+            kWidget.embed({
+                targetId: 'player',
+                wid: '_' + partnerId,
+                uiconf_id: uiconfId,
+                entry_id: entryId,
+                readyCallback: (playerId) => {
+                    const kdp = document.getElementById(playerId);
+                    jumpToTime = (seconds) => {
+                        kdp.sendNotification('doSeek', seconds);
+                        kdp.sendNotification('doPlay');
+                    };
+                }
+            });
+        });
+    }
+    document.body.appendChild(script);
+}
+
+function embedOther(player, data) {
+    if (!data.media_url) {
+        console.error('other: no media_url');
+        return;
+    }
+    let mediaElement = 'video';
+
+    if (data.media_clip_format === 'audio') {
+        mediaElement = 'audio';
+        document.querySelector('#viewer').classList.add('audio');
+    }
+
+    const media = document.createElement(mediaElement);
+    media.src = ensureAbsolute(data.media_url);
+    media.controls = true;
+    media.preload = 'auto';
+
+    jumpToTime = (seconds) => {
+        media.pause();
+        media.currentTime = seconds;
+        media.play();
+    };
+    player.appendChild(media);
+}
+
+function embedVimeo(player, data) {
+    let videoUrl;
+    if (data.media_url) {
+        videoUrl = data.media_url;
+    } else if (data.kembed) {
+        const parser = new DOMParser();
+        const embedDoc = parser.parseFromString(data.kembed, 'text/html');
+        const iframe = embedDoc.querySelector('iframe');
+        if (!iframe) {
+            console.error('vimeo: no iframe in kembed');
+            return;
+        }
+        videoUrl = iframe.src;
+    } else {
+        console.error('vimeo: no media_url or kembed');
+        return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://player.vimeo.com/api/player.js';
+    script.addEventListener('load', () => {
+        const vimeoPlayer = new Vimeo.Player(player, {url: videoUrl});
+        jumpToTime = async (seconds) => {
+            await vimeoPlayer.setCurrentTime(seconds);
+            if (await vimeoPlayer.getPaused()) {
+                vimeoPlayer.play();
+            }
+        };
+    });
+    document.body.appendChild(script);
+}
+
+function embedYoutube(player, data) {
+    let videoId;
+    if (data.media_url) {
+        videoId = data.media_url.replace(/^https?:\/\/youtu.be\//, '');
+    } else if (data.kembed) {
+        const parser = new DOMParser();
+        const embedDoc = parser.parseFromString(data.kembed, 'text/html');
+        const iframe = embedDoc.querySelector('iframe');
+        if (!iframe) {
+            console.error('youtube: no iframe in kembed');
+            return;
+        }
+        videoId = new URL(iframe.src).pathname.replace(/^\/embed\//, '');
+    } else {
+        console.error('youtube: no media_url or kembed');
+        return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://www.youtube.com/iframe_api';
+    window.onYouTubeIframeAPIReady = function () {
+        const ytContainer = document.createElement('div');
+        ytContainer.id = 'youtube-player';
+        player.appendChild(ytContainer);
+        const ytPlayer = new YT.Player('youtube-player', {
+            width: '640',
+            height: '390',
+            videoId: videoId,
+            playerVars: {playsinline: 1}
+        });
+        jumpToTime = (seconds) => {
+            ytPlayer.seekTo(seconds, true);
+            if (ytPlayer.getPlayerState() !== 1) {
+                ytPlayer.playVideo();
+            }
+        };
+    };
+    document.body.appendChild(script);
+}
+
 function displayMedia(data) {
     const player = document.querySelector('#player');
     const host = data.media_host.toLowerCase();
-    switch (host) {
-        case 'vimeo':
-            let videoUrl;
-            if (data.media_url) {
-                videoUrl = data.media_url;
-            } else if (data.kembed) {
-                const parser = new DOMParser();
-                const embedDoc = parser.parseFromString(data.kembed, 'text/html');
-                const iframe = embedDoc.querySelector('iframe');
-                if (!iframe) {
-                    console.error('vimeo: no iframe in kembed');
-                    break;
-                }
-                videoUrl = iframe.src;
-            } else {
-                console.error('vimeo: no media_url or kembed');
-                break;
-            }
-
-            {
-                const script = document.createElement('script');
-                script.src = 'https://player.vimeo.com/api/player.js';
-                script.addEventListener('load', () => {
-                    const vimeoPlayer = new Vimeo.Player(player, {url: videoUrl});
-
-                    jumpToTime = async (seconds) => {
-                        await vimeoPlayer.setCurrentTime(seconds);
-                        if (await vimeoPlayer.getPaused()) {
-                            vimeoPlayer.play();
-                        }
-                    };
-                });
-                document.body.appendChild(script);
-            }
-            break;
-        case 'youtube':
-            let videoId;
-            if (data.media_url) {
-                videoId = data.media_url.replace(/^https?:\/\/youtu.be\//, '');
-            } else if (data.kembed) {
-                const parser = new DOMParser();
-                const embedDoc = parser.parseFromString(data.kembed, 'text/html');
-                const iframe = embedDoc.querySelector('iframe');
-                if (!iframe) {
-                    console.error('youtube: no iframe in kembed');
-                }
-                videoId = new URL(iframe.src).pathname.replace(/^\/embed\//, '');
-            } else {
-                console.error('youtube: no media_url or kembed');
-                break;
-            }
-            {
-                const script = document.createElement('script');
-                script.src = 'https://www.youtube.com/iframe_api';
-                window.onYouTubeIframeAPIReady = function () {
-                    const ytContainer = document.createElement('div');
-                    ytContainer.id = 'youtube-player';
-                    player.appendChild(ytContainer);
-                    const ytPlayer = new YT.Player('youtube-player', {
-                        width: '640',
-                        height: '390',
-                        videoId: videoId,
-                        playerVars: {playsinline: 1}
-                    });
-
-                    jumpToTime = (seconds) => {
-                        ytPlayer.seekTo(seconds, true);
-                        if (ytPlayer.getPlayerState() !== 1) {
-                            ytPlayer.playVideo();
-                        }
-                    };
-                };
-                document.body.appendChild(script);
-            }
-            break;
-        case 'aviary':
-            const url = new URL(data.media_url);
-            if (!url.hostname.endsWith('.aviaryplatform.com')) {
-                console.error('aviary: media_url was not at expected domain');
-                break;
-            }
-
-            player.appendChild(createElement('iframe', {
-                src: data.media_url,
-                width: 480,
-                height: 270,
-            }));
-
-            break;
-        case 'kaltura':
-            if (data.kembed) {
-                const parser = new DOMParser();
-                const embedDoc = parser.parseFromString(data.kembed, 'text/html');
-                const iframe = embedDoc.querySelector('iframe');
-                if (!iframe) {
-                    console.error('kaltura: no iframe in kembed');
-                    break;
-                }
-                const kalturaUrlRegex = /\/p\/([0-9]+)\/(sp\/(?:[0-9]+)00\/embedIframeJs|embedPlaykitJs)\/uiconf_id\/([0-9]+)(?:\/|$)/;
-                const iframeUrl = new URL(iframe.src);
-                const query = new URLSearchParams(iframeUrl.search);
-                const match = iframeUrl.pathname.match(kalturaUrlRegex);
-                if (!match || !query.has('entry_id')) {
-                    console.error('kaltura: no Kaltura URL found');
-                    break;
-                }
-                const partnerId = match[1];
-                const maybePlaykit = match[2];
-                const uiconfId = match[3];
-                const entryId = query.get('entry_id');
-
-                if (maybePlaykit === 'embedPlaykitJs') {
-                    // "v7" player
-                    const script = document.createElement('script');
-                    script.src = `https://cdnapisec.kaltura.com/p/${partnerId}/embedPlaykitJs/uiconf_id/${uiconfId}`;
-                    script.addEventListener('load', async () => {
-                        let kalturaPlayer = KalturaPlayer.setup({
-                            targetId: 'player',
-                            provider: {
-                                partnerId,
-                                uiConfId: uiconfId
-                            },
-                            playback: {
-                                autoplay: false
-                            }
-                        });
-                        await kalturaPlayer.loadMedia({entryId});
-                        jumpToTime = (seconds) => {
-                            kalturaPlayer.currentTime = seconds;
-                            kalturaPlayer.play();
-                        }
-                    });
-                    document.body.appendChild(script);
-                } else {
-                    // "v2" player
-                    const script = document.createElement('script');
-                    script.src = `https://cdnapisec.kaltura.com/p/${partnerId}/sp/${partnerId}00/embedIframeJs/uiconf_id/${uiconfId}/partner_id/${partnerId}`;
-                    script.addEventListener('load', () => {
-                        kWidget.embed({
-                            targetId: 'player',
-                            wid: '_' + partnerId,
-                            uiconf_id: uiconfId,
-                            entry_id: entryId,
-                            readyCallback: (playerId) => {
-                                const kdp = document.getElementById(playerId);
-
-                                jumpToTime = (seconds) => {
-                                    kdp.sendNotification('doSeek', seconds);
-                                    kdp.sendNotification('doPlay');
-                                };
-                            }
-                        });
-                    });
-                    document.body.appendChild(script);
-                }
-            }
-
-            break;
-        case 'other':
-            if (data.media_url) {
-                let mediaElement = 'video';
-
-                if (data.media_clip_format === 'audio') {
-                    mediaElement = 'audio';
-                    document.querySelector('#viewer').classList.add('audio');
-                }
-
-                const media = document.createElement(mediaElement);
-                media.src = ensureAbsolute(data.media_url);
-                media.controls = true;
-                media.preload = 'auto';
-
-                jumpToTime = (seconds) => {
-                    media.pause();
-                    media.currentTime = seconds;
-                    media.play();
-                };
-                player.appendChild(media);
-            }
-            break;
+    const embedFunctions = {
+        aviary: embedAviary,
+        kaltura: embedKaltura,
+        other: embedOther,
+        vimeo: embedVimeo,
+        youtube: embedYoutube
+    };
+    const embedFunction = embedFunctions[host];
+    if (!embedFunction) {
+        console.error(`media: unknown host "${host}"`);
+        return;
     }
+    embedFunction(player, data);
 }
 
 function displayIndex(indexPoints, translate) {
