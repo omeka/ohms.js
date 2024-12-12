@@ -385,8 +385,13 @@ function displayMedia(data) {
                 const parser = new DOMParser();
                 const embedDoc = parser.parseFromString(data.kembed, 'text/html');
                 const iframe = embedDoc.querySelector('iframe');
+                if (!iframe) {
+                    console.error('vimeo: no iframe in kembed');
+                    break;
+                }
                 videoUrl = iframe.src;
             } else {
+                console.error('vimeo: no media_url or kembed');
                 break;
             }
 
@@ -414,7 +419,13 @@ function displayMedia(data) {
                 const parser = new DOMParser();
                 const embedDoc = parser.parseFromString(data.kembed, 'text/html');
                 const iframe = embedDoc.querySelector('iframe');
+                if (!iframe) {
+                    console.error('youtube: no iframe in kembed');
+                }
                 videoId = new URL(iframe.src).pathname.replace(/^\/embed\//, '');
+            } else {
+                console.error('youtube: no media_url or kembed');
+                break;
             }
             {
                 const script = document.createElement('script');
@@ -443,6 +454,7 @@ function displayMedia(data) {
         case 'aviary':
             const url = new URL(data.media_url);
             if (!url.hostname.endsWith('.aviaryplatform.com')) {
+                console.error('aviary: media_url was not at expected domain');
                 break;
             }
 
@@ -458,11 +470,16 @@ function displayMedia(data) {
                 const parser = new DOMParser();
                 const embedDoc = parser.parseFromString(data.kembed, 'text/html');
                 const iframe = embedDoc.querySelector('iframe');
+                if (!iframe) {
+                    console.error('kaltura: no iframe in kembed');
+                    break;
+                }
                 const kalturaUrlRegex = /\/p\/([0-9]+)\/(sp\/(?:[0-9]+)00\/embedIframeJs|embedPlaykitJs)\/uiconf_id\/([0-9]+)(?:\/|$)/;
                 const iframeUrl = new URL(iframe.src);
                 const query = new URLSearchParams(iframeUrl.search);
                 const match = iframeUrl.pathname.match(kalturaUrlRegex);
                 if (!match || !query.has('entry_id')) {
+                    console.error('kaltura: no Kaltura URL found');
                     break;
                 }
                 const partnerId = match[1];
