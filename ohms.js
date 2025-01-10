@@ -202,12 +202,7 @@ function displayTranscript(transcript, sync, indexPoints) {
             if (index % 2 === 0) {
                 span.appendChild(document.createTextNode(str));
             } else {
-                span.appendChild(createElement('a', {
-                    textContent: '[' + str + ']',
-                    id: 'fr' + str,
-                    href: '#fn' + str,
-                    className: 'footnote-link',
-                }));
+                span.appendChild(createFootnoteRef(str));
             }
         });
 
@@ -270,14 +265,7 @@ function extractFootnotes(transcript) {
 
         let footnoteIndex = 1;
         for (const noteMatch of noteMatches) {
-            const footnote = createElement('p', {id: 'fn' + footnoteIndex});
-
-            footnote.appendChild(createElement('a', {
-                textContent: footnoteIndex,
-                href: '#fr' + footnoteIndex,
-                className: 'footnote-linkback',
-            }));
-            footnote.appendChild(document.createTextNode(' '));
+            const footnote = createFootnote(footnoteIndex);
 
             let noteContents = noteMatch[1];
             let noteUrl;
@@ -303,8 +291,9 @@ function extractFootnotes(transcript) {
 function displayVttTranscript(vttTranscript, indexPoints) {
     const timingsRegex = /(^.*-->.*$)/m;
     const voiceTagRegex = /<v(?:\.[^ \t>]+)?[ \t]([^>]*)>/;
-    const vttTagRegex = /<\/?[^>]*>/g;
+    const vttTagRegex = /<(\/?[^>]*)>/g;
     const postCueRegex = /\n\n.*/ms;
+    const noteTagRegex = /^c\.(\d+)$/i;
     const frag = document.createDocumentFragment();
     const vttArray = vttTranscript.split(timingsRegex);
     let previousTimestamp = null;
@@ -339,16 +328,34 @@ function displayVttTranscript(vttTranscript, indexPoints) {
             }
         }
 
+        let currentNote = null;
         caption.replace(postCueRegex, '').split(voiceTagRegex).forEach((captionText, j) => {
             if (j % 2 === 1) {
                 span.appendChild(createElement('b', {textContent: captionText + ': '}));
             } else {
-                span.appendChild(document.createTextNode(captionText.replaceAll(vttTagRegex, '')));
+                captionText.split(vttTagRegex).forEach((captionPart, k) => {
+                    if (k % 2 === 1) {
+                        if (captionPart === '/c' && currentNote) {
+                            span.appendChild(createFootnoteRef(currentNote));
+                            currentNote = null;
+                        }
+                        const tagMatch = captionPart.match(noteTagRegex);
+                        if (tagMatch) {
+                            currentNote = tagMatch[1];
+                        }
+                    } else {
+                        span.appendChild(document.createTextNode(captionPart));
+                    }
+                });
             }
         });
 
         para.appendChild(span);
         frag.appendChild(para);
+    }
+    const footnoteContainer = extractVttFootnotes(vttTranscript);
+    if (footnoteContainer) {
+        frag.appendChild(footnoteContainer);
     }
     return frag;
 }
@@ -371,6 +378,48 @@ function parseVttTimestamp(timestamp) {
         return null;
     }
     return (hours * 3600) + (minutes * 60) + seconds;
+}
+
+function extractVttFootnotes(vttTranscript) {
+    const regex = /ANNOTATIONS BEGIN(.*)ANNOTATIONS END/s;
+    const matches = vttTranscript.match(regex);
+    if (!matches) {
+        return null;
+    } else {
+        const annotations = matches[1];
+        const footnoteContainer = createElement('div', {className: 'footnote-container'});
+        footnoteContainer.appendChild(createElement('h2', {textContent: 'Footnotes'}));
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(annotations, 'text/html');
+
+        doc.querySelectorAll('annotation[ref]').forEach((annotationElement) => {
+            const footnote = createFootnote(annotationElement.getAttribute('ref'));
+            footnote.append(annotationElement.innerText);
+            footnoteContainer.appendChild(footnote);
+        });
+        return footnoteContainer;
+    }
+}
+
+function createFootnoteRef(footnoteNumber) {
+    return createElement('a', {
+        textContent: '[' + footnoteNumber + ']',
+        id: 'fr' + footnoteNumber,
+        href: '#fn' + footnoteNumber,
+        className: 'footnote-link',
+    });
+}
+
+function createFootnote(footnoteNumber) {
+    const footnote = createElement('p', {id: 'fn' + footnoteNumber});
+    footnote.appendChild(createElement('a', {
+        textContent: footnoteNumber,
+        href: '#fr' + footnoteNumber,
+        className: 'footnote-linkback',
+    }));
+    footnote.append(' ');
+    return footnote;
 }
 
 function embedAviary(player, data) {
