@@ -659,7 +659,6 @@ function displayIndex(indexPoints, translate) {
         indexActions.appendChild(createElement('button', {
             type: 'button',
             className: 'fa transcript-index-text-toggle',
-            ariaLabel: 'Toggle',
             title: 'Toggle',
             ariaExpanded: 'false',
         }));
@@ -895,10 +894,12 @@ function setUpControls(data) {
         id: 'toggle-index',
         className: 'fa',
         type: 'button',
-        textContent: 'Toggle index'
+        textContent: 'Toggle index',
+        ariaPressed: 'false',
     });
     indexMobileButton.addEventListener('click', () => {
         document.body.classList.toggle('mobile-index-active');
+        indexMobileButton.ariaPressed = indexMobileButton.ariaPressed === 'false' ? 'true' : 'false';
     });
     controls.appendChild(indexMobileButton);
 
@@ -906,7 +907,6 @@ function setUpControls(data) {
         id: 'show-info',
         className: 'fa',
         type: 'button',
-        ariaLabel: 'Show info',
         title: 'Show info',
     });
     infoButton.addEventListener('click', () => {
@@ -923,14 +923,12 @@ function setUpControls(data) {
             id: 'swap-language',
             className: 'fa',
             type: 'button',
-            ariaLabel: alternateLangLabel,
             title: alternateLangLabel,
         });
         translateButton.addEventListener('click', (e) => {
             e.preventDefault();
             translating = !translating;
             const currentLabel = translating ? originalLangLabel : alternateLangLabel;
-            translateButton.ariaLabel = currentLabel;
             translateButton.title = currentLabel;
             displayTextContent(data, translating);
         });
@@ -941,16 +939,13 @@ function setUpControls(data) {
             id: 'fullscreen',
             className: 'fa enter-fullscreen',
             type: 'button',
-            ariaLabel: 'Fullscreen',
             title: 'Fullscreen'
         });
         document.body.addEventListener('fullscreenchange', (e) => {
             if (document.fullscreenElement) {
-                fullscreenButton.ariaLabel = 'Exit Fullscreen';
                 fullscreenButton.title = 'Exit Fullscreen';
                 fullscreenButton.className = 'fa exit-fullscreen';
             } else {
-                fullscreenButton.ariaLabel = 'Fullscreen';
                 fullscreenButton.title = 'Fullscreen';
                 fullscreenButton.className = 'fa enter-fullscreen';
             }

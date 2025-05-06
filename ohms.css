@@ -243,7 +243,7 @@ h1 {
 }
 
 .fa:before {
-    content: "\f02e";
+    content: "\f02e" / "";
     font-family: "Font Awesome 5 Free";
     font-weight: 900;
     display: inline-block;
@@ -282,11 +282,11 @@ h1 {
 }
 
 .transcript-index-text-toggle:before {
-    content: "\f0da";
+    content: "\f0da" / "";
 }
 
 .index-point.active .transcript-index-text-toggle:before {
-    content: "\f0d7";
+    content: "\f0d7" / "";
 }
 
 .index-partial-transcript,
@@ -307,19 +307,19 @@ h1 {
 }
 
 .enter-fullscreen:before {
-    content: "\f424";
+    content: "\f424" / "";
 }
 
 .exit-fullscreen:before {
-    content: "\f422";
+    content: "\f422" / "";
 }
 
 #swap-language:before {
-    content: "\f0ac";
+    content: "\f0ac" / "";
 }
 
 #show-info:before {
-    content: "\f129";
+    content: "\f129" / "";
 }
 
 #toggle-index {
@@ -343,7 +343,7 @@ h1 {
 }
 
 #info-close:before {
-    content: "\f00d";
+    content: "\f00d" / "";
 }
 
 @media screen and (max-width: 699px) {
@@ -355,12 +355,12 @@ h1 {
     }
 
     #toggle-index:before {
-        content: "\f204";
+        content: "\f204" / "";
         margin-right: .25em;
     }
 
     .mobile-index-active #toggle-index:before {
-        content: "\f205";
+        content: "\f205" / "";
     }
 
     #viewer.no-transcript #controls #toggle-index {
