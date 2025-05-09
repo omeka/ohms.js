@@ -894,7 +894,7 @@ function setUpControls(data) {
         id: 'toggle-index',
         className: 'fa',
         type: 'button',
-        textContent: 'Toggle index',
+        textContent: 'Show index',
         ariaPressed: 'false',
     });
     indexMobileButton.addEventListener('click', () => {
@@ -939,14 +939,14 @@ function setUpControls(data) {
             id: 'fullscreen',
             className: 'fa enter-fullscreen',
             type: 'button',
-            title: 'Fullscreen'
+            title: 'Enter Fullscreen'
         });
         document.body.addEventListener('fullscreenchange', (e) => {
             if (document.fullscreenElement) {
                 fullscreenButton.title = 'Exit Fullscreen';
                 fullscreenButton.className = 'fa exit-fullscreen';
             } else {
-                fullscreenButton.title = 'Fullscreen';
+                fullscreenButton.title = 'Enter Fullscreen';
                 fullscreenButton.className = 'fa enter-fullscreen';
             }
         });
