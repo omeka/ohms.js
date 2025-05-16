@@ -261,7 +261,7 @@ function extractFootnotes(transcript) {
         const noteMatches = footnotes.matchAll(noteRegex);
 
         const footnoteContainer = createElement('div', {className: 'footnote-container'});
-        footnoteContainer.appendChild(createElement('h2', {textContent: 'Footnotes'}));
+        footnoteContainer.appendChild(createElement('h4', {textContent: 'Footnotes'}));
 
         let footnoteIndex = 1;
         for (const noteMatch of noteMatches) {
@@ -388,7 +388,7 @@ function extractVttFootnotes(vttTranscript) {
     } else {
         const annotations = matches[1];
         const footnoteContainer = createElement('div', {className: 'footnote-container'});
-        footnoteContainer.appendChild(createElement('h2', {textContent: 'Footnotes'}));
+        footnoteContainer.appendChild(createElement('h4', {textContent: 'Footnotes'}));
 
         const parser = new DOMParser();
         const doc = parser.parseFromString(annotations, 'text/html');
@@ -747,7 +747,7 @@ function displayMetadata(data) {
     const title = data.title || 'Untitled';
     document.title = title;
 
-    frag.appendChild(createElement('h1', {textContent: title}));
+    frag.appendChild(createElement('h3', {textContent: title}));
 
     frag.appendChild(createElement('span', {
         className: 'repository',
