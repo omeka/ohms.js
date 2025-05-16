@@ -230,6 +230,7 @@ h3 {
 
 .index-title {
     font-weight: bold;
+    overflow-wrap: anywhere;
 }
 
 #player {
